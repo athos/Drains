@@ -2,6 +2,19 @@
 
 A tiny, but incredibly flexible library that utilizes reducing fns and transducers to build composable and reusable computations.
 
+## Installation
+
+To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cli), add the following to your `deps.edn`:
+
+```clj
+{...
+ :deps {...
+        athos/drains {:git/url "https://github.com/athos/Drains.git"
+                      :sha "<commit sha>"}
+        ...}
+ ...}
+```
+
 ## Usage
 
 ```clj
