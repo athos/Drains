@@ -1,5 +1,5 @@
 (ns drains.core
-  (:refer-clojure :exclude [reduce])
+  (:refer-clojure :exclude [into])
   (:require [clojure.core :as cc]))
 
 (defprotocol IDrain
@@ -69,5 +69,5 @@
 (defn with [xf d]
   (-attach d xf))
 
-(defn reduce [drain xs]
+(defn into [drain xs]
   (-residue (cc/reduce -flush drain xs)))
