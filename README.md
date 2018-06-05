@@ -50,9 +50,9 @@ To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cl
         (range 3))
 ;; => [{:val 0} {:val 1} {:val 2}]
 
-;; And, you can combine those with one another however you want
+;; And, you can combine them with one another however you like
 
-(let [items #(d/fmap (fn [items] {:items items}) (d/drain conj))
+(let [items (d/fmap (fn [items] {:items items}) (d/drain conj))
       merge-mean (fn [d]
                    (d/combine-with (fn [v sum count]
                                      (assoc v
@@ -63,9 +63,9 @@ To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cl
                                    (d/drain +)
                                    (d/drain (map (constantly 1)) + 0)))]
   (d/into (d/drains {:evens (d/with (filter even?)
-                                    (merge-mean (items)))
+                                    (merge-mean items))
                      :odds (d/with (filter odd?)
-                                   (merge-mean (items)))})
+                                   (merge-mean items))})
           (range 10)))
 ;; => {:evens {:items [0 2 4 6 8]
 ;;             :sum 20
@@ -75,6 +75,21 @@ To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cl
 ;;            :sum 25
 ;;            :count 5
 ;;            :mean 5.0}}
+
+;; Or, in this paticular case, you can simplify the code into something like
+;; the following:
+
+(let [items (d/combine-with (fn [items sum count]
+                              {:items items
+                               :sum sum
+                               :count count
+                               :mean (/ sum (double count))})
+                            (d/drain conj)
+                            (d/drain +)
+                            (d/drain (map (constantly 1)) + 0))]
+  (d/into (d/drains {:evens (d/with (filter even?) items)
+                     :odds (d/with (filter odd?) items)})
+          (range 10)))
 ```
 
 ## License
