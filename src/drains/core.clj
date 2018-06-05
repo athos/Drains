@@ -3,12 +3,14 @@
   (:require [clojure.core :as cc]))
 
 (defprotocol IDrain
+  (-reduced? [this])
   (-flush [this input])
-  (-attach [this xf])
-  (-residue [this]))
+  (-residue [this])
+  (-attach [this xf]))
 
 (deftype ReducedDrain [val]
   IDrain
+  (-reduced? [this] true)
   (-flush [this _] this)
   (-residue [this] val)
   (-attach [this _] this))
@@ -24,6 +26,7 @@
      (let [rf (cond-> rf xform xform)
            val (volatile! init)]
        (reify IDrain
+         (-reduced? [this] false)
          (-flush [this input]
            (let [val' (rf @val input)]
              (if (reduced? val')
@@ -41,6 +44,7 @@
   (fn []
     (let [ds (volatile! (map-vals unwrap (cond-> ds (seq? ds) vec)))]
       (reify IDrain
+        (-reduced? [this] false)
         (-flush [this input]
           (vreset! ds
                    (reduce-kv (fn [ds k drain]
@@ -60,6 +64,8 @@
   (fn []
     (let [d (volatile! (unwrap d))]
       (reify IDrain
+        (-reduced? [this]
+          (-reduced? @d))
         (-flush [this input]
           (vswap! d -flush input)
           this)
@@ -74,13 +80,11 @@
 (defn with [xf d]
   (-attach (unwrap d) xf))
 
-(defn into [drain xs]
-  (-residue (cc/reduce -flush (unwrap drain) xs)))
-
 (defn by-key [key-fn d]
   (fn []
     (let [ds (volatile! {})]
       (reify IDrain
+        (-reduced? [this] false)
         (-flush [this input]
           (let [key (key-fn input)]
             (if-let [d (get @ds key)]
@@ -93,3 +97,13 @@
           (map-vals -residue @ds))
         (-attach [this xf]
           (by-key key-fn (-attach (unwrap d) xf)))))))
+
+(defn into [drain xs]
+  (-> (cc/reduce (fn [d input]
+                   (let [d' (-flush d input)]
+                     (if (-reduced? d')
+                       (reduced d')
+                       d')))
+                 (unwrap drain)
+                 xs)
+      -residue))
