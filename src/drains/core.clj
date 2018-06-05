@@ -77,3 +77,20 @@
 
 (defn into [drain xs]
   (-residue (cc/reduce -flush (unwrap drain) xs)))
+
+(defn by-key [key-fn d]
+  (fn []
+    (let [ds (volatile! {})]
+      (reify IDrain
+        (-flush [this input]
+          (let [key (key-fn input)]
+            (if-let [d (get @ds key)]
+              (-flush d input)
+              (let [d (unwrap d)]
+                (vswap! ds assoc key d)
+                (-flush d input)))
+            this))
+        (-residue [this]
+          (cc/into {} (map (fn [[k d]] [k (-residue d)])) @ds))
+        (-attach [this xf]
+          (by-key key-fn (-attach (unwrap d) xf)))))))
