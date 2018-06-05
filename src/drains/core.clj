@@ -83,22 +83,29 @@
 (defn by-key [key-fn d]
   (fn []
     (let [ds (volatile! {})]
-      (reify IDrain
-        (-reduced? [this] false)
-        (-flush [this input]
-          (let [key (key-fn input)]
-            (when-not (contains? @ds key)
-              (let [d (unwrap d)]
-                (vswap! ds assoc key d)))
-            (let [d (get @ds key)
-                  d' (-flush d input)]
-              (when-not (identical? d d')
-                (vswap! ds assoc key d')))
-            this))
-        (-residue [this]
-          (map-vals -residue @ds))
-        (-attach [this xf]
-          (by-key key-fn (-attach (unwrap d) xf)))))))
+      (letfn [(make [rf reduced?]
+                (reify IDrain
+                  (-reduced? [this] reduced?)
+                  (-flush [this input]
+                    (let [d (rf this input)]
+                      (if (cc/reduced? d)
+                        (make rf true)
+                        d)))
+                  (-residue [this]
+                    (map-vals -residue @ds))
+                  (-attach [this xf]
+                    #(make (xf rf) reduced?))))
+              (insert [this input]
+                (let [key (key-fn input)]
+                  (when-not (contains? @ds key)
+                    (let [d (unwrap d)]
+                      (vswap! ds assoc key d)))
+                  (let [d (get @ds key)
+                        d' (-flush d input)]
+                    (when-not (identical? d d')
+                      (vswap! ds assoc key d')))
+                  this))]
+        (make insert false)))))
 
 (defn into [drain xs]
   (-> (cc/reduce (fn [d input]
