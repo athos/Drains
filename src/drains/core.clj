@@ -34,13 +34,12 @@
          (-attach [this xf]
            (drain xf rf @val)))))))
 
+(defn- map-vals [f kvs]
+  (persistent! (reduce-kv #(assoc! %1 %2 (f %3)) (transient kvs) kvs)))
+
 (defn drains [ds]
   (fn []
-    (let [map' (fn [f ds]
-                 (->> ds
-                      (reduce-kv #(assoc! %1 %2 (f %3)) (transient ds))
-                      persistent!))
-          ds (volatile! (map' unwrap (cond-> ds (seq? ds) vec)))]
+    (let [ds (volatile! (map-vals unwrap (cond-> ds (seq? ds) vec)))]
       (reify IDrain
         (-flush [this input]
           (vreset! ds
@@ -53,9 +52,9 @@
                               @ds))
           this)
         (-residue [this]
-          (map' -residue @ds))
+          (map-vals -residue @ds))
         (-attach [this xf]
-          (drains (map' #(-attach % xf) @ds)))))))
+          (drains (map-vals #(-attach % xf) @ds)))))))
 
 (defn fmap [f d]
   (fn []
@@ -91,6 +90,6 @@
                 (-flush d input)))
             this))
         (-residue [this]
-          (cc/into {} (map (fn [[k d]] [k (-residue d)])) @ds))
+          (map-vals -residue @ds))
         (-attach [this xf]
           (by-key key-fn (-attach (unwrap d) xf)))))))
