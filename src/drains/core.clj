@@ -87,11 +87,13 @@
         (-reduced? [this] false)
         (-flush [this input]
           (let [key (key-fn input)]
-            (if-let [d (get @ds key)]
-              (-flush d input)
+            (when-not (contains? @ds key)
               (let [d (unwrap d)]
-                (vswap! ds assoc key d)
-                (-flush d input)))
+                (vswap! ds assoc key d)))
+            (let [d (get @ds key)
+                  d' (-flush d input)]
+              (when-not (identical? d d')
+                (vswap! ds assoc key d')))
             this))
         (-residue [this]
           (map-vals -residue @ds))
