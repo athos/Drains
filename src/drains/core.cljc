@@ -1,15 +1,10 @@
 (ns drains.core
   (:refer-clojure :exclude [into group-by])
-  (:require [clojure.core :as cc]))
-
-(defprotocol IDrain
-  (-reduced? [this])
-  (-flush [this input])
-  (-residue [this])
-  (-attach [this xf]))
+  (:require [clojure.core :as cc]
+            [drains.protocols :as p]))
 
 (deftype ReducedDrain [val]
-  IDrain
+  p/IDrain
   (-reduced? [this] true)
   (-flush [this _] this)
   (-residue [this] val)
@@ -25,7 +20,7 @@
    (fn []
      (let [rf (cond-> rf xform xform)
            val (volatile! init)]
-       (reify IDrain
+       (reify p/IDrain
          (-reduced? [this] false)
          (-flush [this input]
            (let [val' (rf @val input)]
@@ -43,12 +38,12 @@
 (defn drains [ds]
   (fn []
     (let [ds (volatile! (map-vals unwrap (cond-> ds (seq? ds) vec)))]
-      (reify IDrain
+      (reify p/IDrain
         (-reduced? [this] false)
         (-flush [this input]
           (vreset! ds
                    (reduce-kv (fn [ds k drain]
-                                (let [drain' (-flush drain input)]
+                                (let [drain' (p/-flush drain input)]
                                   (if (identical? drain drain')
                                     ds
                                     (assoc ds k drain'))))
@@ -56,35 +51,35 @@
                               @ds))
           this)
         (-residue [this]
-          (map-vals -residue @ds))
+          (map-vals p/-residue @ds))
         (-attach [this xf]
-          (drains (map-vals #(-attach % xf) @ds)))))))
+          (drains (map-vals #(p/-attach % xf) @ds)))))))
 
 (defn fmap [f d]
   (fn []
     (let [d (volatile! (unwrap d))]
-      (reify IDrain
+      (reify p/IDrain
         (-reduced? [this]
-          (-reduced? @d))
+          (p/-reduced? @d))
         (-flush [this input]
-          (vswap! d -flush input)
+          (vswap! d p/-flush input)
           this)
         (-residue [this]
-          (f (-residue @d)))
+          (f (p/-residue @d)))
         (-attach [this xf]
-          (fmap f (-attach @d xf)))))))
+          (fmap f (p/-attach @d xf)))))))
 
 (defn combine-with [f & ds]
   (fmap #(apply f %) (drains ds)))
 
 (defn with [xf d]
-  (-attach (unwrap d) xf))
+  (p/-attach (unwrap d) xf))
 
 (defn group-by [key-fn d]
   (fn []
     (let [ds (volatile! {})]
       (letfn [(make [rf reduced?]
-                (reify IDrain
+                (reify p/IDrain
                   (-reduced? [this] reduced?)
                   (-flush [this input]
                     (let [d (rf this input)]
@@ -92,7 +87,7 @@
                         (make rf true)
                         d)))
                   (-residue [this]
-                    (map-vals -residue @ds))
+                    (map-vals p/-residue @ds))
                   (-attach [this xf]
                     #(make (xf rf) reduced?))))
               (insert [this input]
@@ -101,7 +96,7 @@
                     (let [d (unwrap d)]
                       (vswap! ds assoc key d)))
                   (let [d (get @ds key)
-                        d' (-flush d input)]
+                        d' (p/-flush d input)]
                     (when-not (identical? d d')
                       (vswap! ds assoc key d')))
                   this))]
@@ -109,10 +104,10 @@
 
 (defn into [drain xs]
   (-> (cc/reduce (fn [d input]
-                   (let [d' (-flush d input)]
-                     (if (-reduced? d')
+                   (let [d' (p/-flush d input)]
+                     (if (p/-reduced? d')
                        (reduced d')
                        d')))
                  (unwrap drain)
                  xs)
-      -residue))
+      p/-residue))
