@@ -1,5 +1,5 @@
 (ns drains.core
-  (:refer-clojure :exclude [into group-by])
+  (:refer-clojure :exclude [into group-by flush])
   (:require [clojure.core :as cc]
             [drains.protocols :as p]))
 
@@ -101,6 +101,15 @@
                       (vswap! ds assoc key d')))
                   this))]
         (make insert false)))))
+
+(defn open [drain]
+  (unwrap drain))
+
+(defn flush [drain input]
+  (p/-flush drain input))
+
+(defn residue [drain]
+  (p/-residue drain))
 
 (defn into [drain xs]
   (-> (cc/reduce (fn [d input]
