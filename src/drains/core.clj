@@ -1,5 +1,5 @@
 (ns drains.core
-  (:refer-clojure :exclude [into])
+  (:refer-clojure :exclude [into group-by])
   (:require [clojure.core :as cc]))
 
 (defprotocol IDrain
@@ -80,7 +80,7 @@
 (defn with [xf d]
   (-attach (unwrap d) xf))
 
-(defn by-key [key-fn d]
+(defn group-by [key-fn d]
   (fn []
     (let [ds (volatile! {})]
       (letfn [(make [rf reduced?]

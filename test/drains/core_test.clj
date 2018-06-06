@@ -118,35 +118,35 @@
     (range 5)
     ["1" "2" "3" "4" "5"]))
 
-(deftest by-key-test
+(deftest group-by-test
   (are [d input expected] (= expected (d/into d input))
-    (d/by-key #(rem % 3)
-              (d/drain conj))
+    (d/group-by #(rem % 3)
+                (d/drain conj))
     (range 10)
     {0 [0 3 6 9], 1 [1 4 7],  2 [2 5 8]}
 
-    (d/by-key #(rem % 3)
-              (d/drains {:sum (d/drain +)
-                         :count (d/drain (map (constantly 1)) + 0)}))
+    (d/group-by #(rem % 3)
+                (d/drains {:sum (d/drain +)
+                           :count (d/drain (map (constantly 1)) + 0)}))
     (range 10)
     {0 {:sum 18 :count 4}
      1 {:sum 12 :count 3}
      2 {:sum 15 :count 3}}
 
-    (d/by-key #(rem % 3)
-              (d/fmap (fn [sum] {:sum sum})
-                      (d/drain +)))
+    (d/group-by #(rem % 3)
+                (d/fmap (fn [sum] {:sum sum})
+                        (d/drain +)))
     (range 10)
     {0 {:sum 18}, 1 {:sum 12}, 2 {:sum 15}}
 
-    (d/by-key #(rem % 3)
-              (d/with (take 3)
-                      (d/drain conj)))
+    (d/group-by #(rem % 3)
+                (d/with (take 3)
+                        (d/drain conj)))
     (range 10)
     {0 [0 3 6], 1 [1 4 7], 2 [2 5 8]}
 
     (d/with (take 3)
-            (d/by-key #(rem % 3)
-                      (d/drain conj)))
+            (d/group-by #(rem % 3)
+                        (d/drain conj)))
     (range 10)
     {0 [0], 1 [1], 2 [2]}))
