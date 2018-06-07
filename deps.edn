@@ -2,6 +2,4 @@
  :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
  :aliases
  {:test {:extra-paths ["test"]
-         :extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                                                 :sha "78d380d00e7a27f7b835bb90af37e73b20c49bcc"}}
-         :main-opts ["-m" "cognitect.test-runner"]}}}
+         :main-opts ["-m" "drains.test-runner"]}}}
