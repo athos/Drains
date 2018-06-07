@@ -29,10 +29,6 @@ jobs:
           name: test CLJ
           command: clojure -A:test
 
-      # - run:
-      #     name: test CLJS
-      #     command: lein test-cljs-none once
-
-      # - run:
-      #     name: test CLJS min
-      #     command: lein test-cljs-min once
+      - run:
+          name: test CLJS
+          command: clojure -A:test:test-cljs
