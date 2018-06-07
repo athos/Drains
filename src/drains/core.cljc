@@ -1,5 +1,5 @@
 (ns drains.core
-  (:refer-clojure :exclude [into group-by flush])
+  (:refer-clojure :exclude [into group-by])
   (:require [clojure.core :as cc]
             [drains.protocols :as p]))
 
@@ -105,7 +105,7 @@
 (defn open [drain]
   (unwrap drain))
 
-(defn flush [drain input]
+(defn flush! [drain input]
   (p/-flush drain input))
 
 (defn residue [drain]
