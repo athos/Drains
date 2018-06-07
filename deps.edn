@@ -1,5 +1,7 @@
 {:paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
+ :deps {org.clojure/clojure {:mvn/version "1.9.0"}
+        org.clojure/clojurescript {:mvn/version "1.10.238"}}
  :aliases
  {:test {:extra-paths ["test"]
-         :main-opts ["-m" "drains.test-runner"]}}}
+         :main-opts ["-m" "drains.test-runner"]}
+  :test-cljs {:main-opts ["-m" "cljs.main" "-re" "nashorn" "-m" "drains.test-runner"]}}}
