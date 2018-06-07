@@ -32,8 +32,8 @@
     (range 10)
     [45 "0123456789"]
 
-    (d/drains {:min (d/drain min Long/MAX_VALUE)
-               :max (d/drain max Long/MIN_VALUE)})
+    (d/drains {:min (d/drain min ##Inf)
+               :max (d/drain max ##-Inf)})
     [3 1 4 1 5 9 2 6 5]
     {:min 1 :max 9}
 
@@ -50,8 +50,8 @@
     {:sum 45}
 
     (d/fmap (fn [[min max]] {:min min :max max})
-            (d/drains [(d/drain min Long/MAX_VALUE)
-                       (d/drain max Long/MIN_VALUE)]))
+            (d/drains [(d/drain min ##Inf)
+                       (d/drain max ##-Inf)]))
     [3 1 4 1 5 9 2 6 5]
     {:min 1 :max 9}
 
@@ -95,8 +95,8 @@
     6
 
     (d/with (filter even?)
-            (d/drains [(d/drain min Long/MAX_VALUE)
-                       (d/drain max Long/MIN_VALUE)]))
+            (d/drains [(d/drain min ##Inf)
+                       (d/drain max ##-Inf)]))
     [3 1 4 1 5 9 2 6 5]
     [2 6]
 

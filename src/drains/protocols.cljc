@@ -1,4 +1,5 @@
-(ns drains.protocols)
+(ns drains.protocols
+  (:refer-clojure :exclude [-flush]))
 
 (defprotocol IDrain
   (-reduced? [this])
