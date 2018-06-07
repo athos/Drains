@@ -1,7 +1,7 @@
 # Drains
 [![CircleCI](https://circleci.com/gh/athos/Drains.svg?style=shield)](https://circleci.com/gh/athos/Drains)
 
-A tiny, but incredibly flexible library that utilizes reducing fns and transducers to build composable and reusable computations.
+Swiss Army knife for sequence data aggregation in Clojure(Script)
 
 ## Installation
 
