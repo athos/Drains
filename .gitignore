@@ -6,6 +6,7 @@ pom.xml.asc
 *.jar
 *.class
 /.cpcache
+/nashorn_code_cache
 /.lein-*
 /.nrepl-port
 .hgignore
