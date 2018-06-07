@@ -1,0 +1,37 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: jesiio/web:0.1
+
+    working_directory: ~/repo
+
+    environment:
+      LEIN_ROOT: "true"
+      JVM_OPTS: -Xmx3200m
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          key: v1-dependencies-{{ checksum "project.clj" }}
+
+      - run: lein deps
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "project.clj" }}
+
+      - run:
+          name: test CLJ
+          command: lein test
+
+      # - run:
+      #     name: test CLJS
+      #     command: lein test-cljs-none once
+
+      # - run:
+      #     name: test CLJS min
+      #     command: lein test-cljs-min once
