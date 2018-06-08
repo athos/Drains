@@ -37,23 +37,28 @@
 
 (defn drains [ds]
   (fn []
-    (let [ds (volatile! (map-vals unwrap (cond-> ds (seq? ds) vec)))]
+    (let [ds (cond-> ds (seq? ds) vec)
+          state (volatile! {:ds (map-vals unwrap ds)
+                            :active-keys (reduce-kv (fn [ks k _] (conj ks k)) #{} ds)})]
       (reify p/IDrain
-        (-reduced? [this] false)
+        (-reduced? [this] (empty? (:active-keys @state)))
         (-flush [this input]
-          (vreset! ds
-                   (reduce-kv (fn [ds k drain]
-                                (let [drain' (p/-flush drain input)]
-                                  (if (identical? drain drain')
-                                    ds
-                                    (assoc ds k drain'))))
-                              @ds
-                              @ds))
+          (vswap! state
+                  (fn [state]
+                    (reduce-kv (fn [state k drain]
+                                 (let [drain' (p/-flush drain input)]
+                                   (if (identical? drain drain')
+                                     state
+                                     (cond-> (update state :ds assoc k drain')
+                                       (p/-reduced? drain')
+                                       (update :active-keys disj k)))))
+                               state
+                               (:ds state))))
           this)
         (-residue [this]
-          (map-vals p/-residue @ds))
+          (map-vals p/-residue (:ds @state)))
         (-attach [this xf]
-          (drains (map-vals #(p/-attach % xf) @ds)))))))
+          (drains (map-vals #(p/-attach % xf) (:ds @state))))))))
 
 (defn fmap [f d]
   (fn []

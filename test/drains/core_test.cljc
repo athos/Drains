@@ -40,7 +40,12 @@
     (d/drains [(d/drain (take 5) + 0)
                (d/drain (drop 5) + 0)])
     (range 10)
-    [10 35]))
+    [10 35]
+
+    (d/drains [(d/drain (take 5) min ##Inf)
+               (d/drain (take 5) max ##-Inf)])
+    (range)
+    [0 4]))
 
 (deftest fmap-test
   (are [d input expected] (= expected (d/into d input))
