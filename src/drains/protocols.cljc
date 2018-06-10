@@ -4,5 +4,5 @@
 (defprotocol IDrain
   (-reduced? [this])
   (-flush [this input])
-  (-residue [this])
+  (-residual [this])
   (-attach [this xf]))

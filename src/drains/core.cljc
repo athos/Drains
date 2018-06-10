@@ -7,7 +7,7 @@
   p/IDrain
   (-reduced? [this] true)
   (-flush [this _] this)
-  (-residue [this] val)
+  (-residual [this] val)
   (-attach [this _] this))
 
 (defn- unwrap [x]
@@ -28,7 +28,7 @@
                (->ReducedDrain (rf @val'))
                (do (vreset! val val')
                    this))))
-         (-residue [this] @val)
+         (-residual [this] @val)
          (-attach [this xf]
            (drain xf rf @val)))))))
 
@@ -55,8 +55,8 @@
                                state
                                (:ds state))))
           this)
-        (-residue [this]
-          (map-vals p/-residue (:ds @state)))
+        (-residual [this]
+          (map-vals p/-residual (:ds @state)))
         (-attach [this xf]
           (drains (map-vals #(p/-attach % xf) (:ds @state))))))))
 
@@ -69,8 +69,8 @@
         (-flush [this input]
           (vswap! d p/-flush input)
           this)
-        (-residue [this]
-          (f (p/-residue @d)))
+        (-residual [this]
+          (f (p/-residual @d)))
         (-attach [this xf]
           (fmap f (p/-attach @d xf)))))))
 
@@ -91,8 +91,8 @@
                       (if (cc/reduced? d)
                         (make rf true)
                         d)))
-                  (-residue [this]
-                    (map-vals p/-residue @ds))
+                  (-residual [this]
+                    (map-vals p/-residual @ds))
                   (-attach [this xf]
                     #(make (xf rf) reduced?))))
               (insert [this input]
@@ -113,8 +113,8 @@
 (defn flush! [drain input]
   (p/-flush drain input))
 
-(defn residue [drain]
-  (p/-residue drain))
+(defn residual [drain]
+  (p/-residual drain))
 
 (defn into [drain xs]
   (-> (cc/reduce (fn [d input]
@@ -124,4 +124,4 @@
                        d')))
                  (unwrap drain)
                  xs)
-      p/-residue))
+      p/-residual))
