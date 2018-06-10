@@ -8,3 +8,6 @@
 
 (defprotocol Attachable
   (-attach [this xf]))
+
+(defprotocol ToUnsafe
+  (->unsafe [this]))

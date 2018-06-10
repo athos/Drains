@@ -2,10 +2,14 @@
   (:refer-clojure :exclude [group-by])
   (:require [clojure.core :as cc]
             [drains.protocols :as p]
-            [drains.impl.reduced :as reduced]))
+            [drains.impl.reduced :as reduced]
+            [drains.impl.unsafe :as unsafe]))
 
 (defn unwrap [x]
   (if (fn? x) (x) x))
+
+(defn ->unsafe [x]
+  (if (satisfies? p/ToUnsafe x) (p/->unsafe x) x))
 
 (defn drain [xform rf init]
   (fn []
@@ -23,7 +27,10 @@
         (-residual [this] @val)
         p/Attachable
         (-attach [this xf]
-          (drain xf rf @val))))))
+          (drain xf rf @val))
+        p/ToUnsafe
+        (->unsafe [this]
+          (unsafe/->UnsafeDrain rf @val))))))
 
 (defn- map-vals [f kvs]
   (persistent! (reduce-kv #(assoc! %1 %2 (f %3)) (transient kvs) kvs)))
@@ -53,7 +60,12 @@
           (map-vals p/-residual (:ds @state)))
         p/Attachable
         (-attach [this xf]
-          (drains (map-vals #(p/-attach % xf) (:ds @state))))))))
+          (drains (map-vals #(p/-attach % xf) (:ds @state))))
+        p/ToUnsafe
+        (->unsafe [this]
+          (unsafe/->UnsafeDrains (map-vals ->unsafe (:ds @state))
+                                 (transient (:active-keys @state))
+                                 false))))))
 
 (defn fmap [f d]
   (fn []
@@ -69,7 +81,10 @@
           (f (p/-residual @d)))
         p/Attachable
         (-attach [this xf]
-          (fmap f (p/-attach @d xf)))))))
+          (fmap f (p/-attach @d xf)))
+        p/ToUnsafe
+        (->unsafe [this]
+          (unsafe/->UnsafeFmap f (->unsafe @d) false))))))
 
 (defn group-by [key-fn d]
   (fn []

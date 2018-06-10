@@ -40,6 +40,6 @@
                      (if (p/-reduced? d')
                        (reduced d')
                        d')))
-                 (impl/unwrap drain)
+                 (impl/->unsafe (impl/unwrap drain))
                  xs)
       p/-residual))
