@@ -1,14 +1,8 @@
 (ns drains.impl.safe
   (:refer-clojure :exclude [group-by])
   (:require [clojure.core :as cc]
-            [drains.protocols :as p]))
-
-(deftype ReducedDrain [val]
-  p/IDrain
-  (-reduced? [this] true)
-  (-flush [this _] this)
-  (-residual [this] val)
-  (-attach [this _] this))
+            [drains.protocols :as p]
+            [drains.impl.reduced :as reduced]))
 
 (defn unwrap [x]
   (if (fn? x) (x) x))
@@ -22,7 +16,7 @@
         (-flush [this input]
           (let [val' (rf @val input)]
             (if (reduced? val')
-              (->ReducedDrain (rf @val'))
+              (reduced/->ReducedDrain (rf @val'))
               (do (vreset! val val')
                   this))))
         (-residual [this] @val)
