@@ -11,7 +11,8 @@
   (fn []
     (let [rf (cond-> rf xform xform)
           val (volatile! init)]
-      (reify p/IDrain
+      (reify
+        p/IDrain
         (-reduced? [this] false)
         (-flush [this input]
           (let [val' (rf @val input)]
@@ -20,6 +21,7 @@
               (do (vreset! val val')
                   this))))
         (-residual [this] @val)
+        p/Attachable
         (-attach [this xf]
           (drain xf rf @val))))))
 
@@ -31,7 +33,8 @@
     (let [ds (cond-> ds (seq? ds) vec)
           state (volatile! {:ds (map-vals unwrap ds)
                             :active-keys (reduce-kv (fn [ks k _] (conj ks k)) #{} ds)})]
-      (reify p/IDrain
+      (reify
+        p/IDrain
         (-reduced? [this] (empty? (:active-keys @state)))
         (-flush [this input]
           (vswap! state
@@ -48,13 +51,15 @@
           this)
         (-residual [this]
           (map-vals p/-residual (:ds @state)))
+        p/Attachable
         (-attach [this xf]
           (drains (map-vals #(p/-attach % xf) (:ds @state))))))))
 
 (defn fmap [f d]
   (fn []
     (let [d (volatile! (unwrap d))]
-      (reify p/IDrain
+      (reify
+        p/IDrain
         (-reduced? [this]
           (p/-reduced? @d))
         (-flush [this input]
@@ -62,6 +67,7 @@
           this)
         (-residual [this]
           (f (p/-residual @d)))
+        p/Attachable
         (-attach [this xf]
           (fmap f (p/-attach @d xf)))))))
 
@@ -69,7 +75,8 @@
   (fn []
     (let [ds (volatile! {})]
       (letfn [(make [rf reduced?]
-                (reify p/IDrain
+                (reify
+                  p/IDrain
                   (-reduced? [this] reduced?)
                   (-flush [this input]
                     (let [d (rf this input)]
@@ -78,6 +85,7 @@
                         d)))
                   (-residual [this]
                     (map-vals p/-residual @ds))
+                  p/Attachable
                   (-attach [this xf]
                     #(make (xf rf) reduced?))))
               (insert [this input]

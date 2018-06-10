@@ -6,4 +6,5 @@
   (-reduced? [this] true)
   (-flush [this _] this)
   (-residual [this] val)
+  p/Attachable
   (-attach [this _] this))
