@@ -21,34 +21,34 @@ To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cl
 ```clj
 (require '[drains.core :as d])
 
-(d/into (d/drain (filter even?) + 0) (range 10))
+(d/reduce (d/drain (filter even?) + 0) (range 10))
 ;; => 20
 ;; == (+ 0 2 4 6 8)
 
-(d/into (d/drains [(d/drain min Long/MAX_VALUE)
-                   (d/drain max Long/MIN_VALUE)])
-        (range 10))
+(d/reduce (d/drains [(d/drain min Long/MAX_VALUE)
+                     (d/drain max Long/MIN_VALUE)])
+          (range 10))
 ;; => [0 9]
 
-(d/into (d/drains {:min (d/drain min Long/MAX_VALUE)
-                   :max (d/drain max Long/MIN_VALUE)})
-        (range 10))
+(d/reduce (d/drains {:min (d/drain min Long/MAX_VALUE)
+                     :max (d/drain max Long/MIN_VALUE)})
+          (range 10))
 ;; => {:min 0, :max 9}
 
-(d/into (d/fmap (fn [sum] {:sum sum})
-                (d/drain +))
-        (range 10))
+(d/reduce (d/fmap (fn [sum] {:sum sum})
+                  (d/drain +))
+          (range 10))
 ;; => {:sum 45}
 
-(d/into (d/combine-with (fn [sum count] {:sum sum :count count})
-                        (d/drain +)
-                        (d/drain (map (constantly 1)) + 0))
-        (range 10))
+(d/reduce (d/combine-with (fn [sum count] {:sum sum :count count})
+                          (d/drain +)
+                          (d/drain (map (constantly 1)) + 0))
+          (range 10))
 ;; => {:sum 45 :count 10}
 
-(d/into (d/with (map (partial array-map :val))
-                (d/drain conj []))
-        (range 3))
+(d/reduce (d/with (map (partial array-map :val))
+                  (d/drain conj []))
+          (range 3))
 ;; => [{:val 0} {:val 1} {:val 2}]
 
 ;; And, you can combine them with one another however you like
@@ -63,11 +63,11 @@ To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cl
                                    d
                                    (d/drain +)
                                    (d/drain (map (constantly 1)) + 0)))]
-  (d/into (d/drains {:evens (d/with (filter even?)
-                                    (merge-mean items))
-                     :odds (d/with (filter odd?)
-                                   (merge-mean items))})
-          (range 10)))
+  (d/reduce (d/drains {:evens (d/with (filter even?)
+                                      (merge-mean items))
+                       :odds (d/with (filter odd?)
+                                     (merge-mean items))})
+            (range 10)))
 ;; => {:evens {:items [0 2 4 6 8]
 ;;             :sum 20
 ;;             :count 5
@@ -88,9 +88,9 @@ To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cl
                             (d/drain conj)
                             (d/drain +)
                             (d/drain (map (constantly 1)) + 0))]
-  (d/into (d/drains {:evens (d/with (filter even?) items)
-                     :odds (d/with (filter odd?) items)})
-          (range 10)))
+  (d/reduce (d/drains {:evens (d/with (filter even?) items)
+                       :odds (d/with (filter odd?) items)})
+            (range 10)))
 ```
 
 ## License

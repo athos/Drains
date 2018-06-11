@@ -1,5 +1,5 @@
 (ns drains.core
-  (:refer-clojure :exclude [into group-by])
+  (:refer-clojure :exclude [reduce group-by])
   (:require [clojure.core :as cc]
             [drains.impl.safe :as impl]
             [drains.protocols :as p]))
@@ -34,12 +34,14 @@
 (defn residual [drain]
   (p/-residual drain))
 
-(defn into [drain xs]
-  (-> (cc/reduce (fn [d input]
-                   (let [d' (p/-flush d input)]
-                     (if (p/-reduced? d')
-                       (reduced d')
-                       d')))
-                 (impl/->unsafe (impl/unwrap drain))
-                 xs)
-      p/-residual))
+(defn into! [drain xs]
+  (cc/reduce (fn [d input]
+               (let [d' (p/-flush d input)]
+                 (if (p/-reduced? d')
+                   (reduced d')
+                   d')))
+             (impl/unwrap drain)
+             xs))
+
+(defn reduce [drain xs]
+  (p/-residual (into! (impl/->unsafe (impl/unwrap drain)) xs)))
