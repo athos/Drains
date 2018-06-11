@@ -1,5 +1,5 @@
 (ns drains.core
-  (:refer-clojure :exclude [reduce group-by])
+  (:refer-clojure :exclude [reduce reductions group-by])
   (:require [clojure.core :as cc]
             [drains.impl.safe :as impl]
             [drains.protocols :as p]))
@@ -45,3 +45,13 @@
 
 (defn reduce [drain xs]
   (p/-residual (into! (impl/->unsafe (impl/unwrap drain)) xs)))
+
+(defn reductions [drain xs]
+  (letfn [(rec [drain xs]
+            (lazy-seq
+             (cons (p/-residual drain)
+                   (when-not (p/-reduced? drain)
+                     (when-first [x xs]
+                       (let [drain (p/-flush drain x)]
+                         (rec drain (next xs))))))))]
+    (rec (impl/->unsafe (impl/unwrap drain)) xs)))
