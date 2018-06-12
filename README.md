@@ -1,4 +1,5 @@
 # Drains
+[![Clojars Project](https://img.shields.io/clojars/v/drains.svg)](https://clojars.org/drains)
 [![CircleCI](https://circleci.com/gh/athos/Drains.svg?style=shield)](https://circleci.com/gh/athos/Drains)
 
 Drains: A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)
@@ -8,7 +9,11 @@ This library provides several easy ways to combining multiple drains and to prod
 
 ## Installation
 
-To use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cli), add the following to your `deps.edn`:
+Add the following to your `:dependencies`:
+
+[![Clojars Project](https://clojars.org/drains/latest-version.svg)](https://clojars.org/drains)
+
+Or, if you want to use the library via [Clojure CLI tool](https://clojure.org/guides/deps_and_cli), add the following to your `deps.edn` instead:
 
 ```clj
 {...
