@@ -63,9 +63,14 @@
           (drains (map-vals #(p/-attach % xf) (:ds @state))))
         p/ToUnsafe
         (->unsafe [this]
-          (unsafe/->UnsafeDrains (map-vals ->unsafe (:ds @state))
-                                 (transient (:active-keys @state))
-                                 false))))))
+          (let [ds (map-vals ->unsafe (:ds @state))]
+            (or (when (vector? ds)
+                  (case (count ds)
+                    2 (unsafe/->UnsafeDrains2 (nth ds 0) (nth ds 1) false false ds)
+                    3 (unsafe/->UnsafeDrains3 (nth ds 0) (nth ds 1) (nth ds 2)
+                                              false false false ds)
+                    nil))
+                (unsafe/->UnsafeDrains ds (transient (:active-keys @state)) false))))))))
 
 (defn fmap [f d]
   (fn []
