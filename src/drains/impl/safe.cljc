@@ -24,7 +24,7 @@
               (reduced/->ReducedDrain (rf @val'))
               (do (vreset! val val')
                   this))))
-        (-residual [this] @val)
+        (-residual [this] (rf @val))
         p/Attachable
         (-attach [this xf]
           (drain xf rf @val))

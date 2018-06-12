@@ -12,7 +12,7 @@
         (reduced/->ReducedDrain (rf @val'))
         (do (set! val val')
             this))))
-  (-residual [this] val))
+  (-residual [this] (rf val)))
 
 ;; FIXME: we can't change mutable fields from within fn exprs, so have to bypass
 ;; that restriction by using dedicated protocol methods
