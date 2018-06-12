@@ -1,5 +1,5 @@
 (defproject drains "0.1.0-SNAPSHOT"
-  :description "Swiss Army knife for sequence data aggregation in Clojure(Script)"
+  :description "A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)"
   :url "https://github.com/athos/Drains"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

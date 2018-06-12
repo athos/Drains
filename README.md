@@ -1,7 +1,7 @@
 # Drains
 [![CircleCI](https://circleci.com/gh/athos/Drains.svg?style=shield)](https://circleci.com/gh/athos/Drains)
 
-Swiss Army knife for sequence data aggregation in Clojure(Script)
+Drains: A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)
 
 ## Installation
 
