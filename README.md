@@ -5,7 +5,7 @@
 Drains: A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)
 
 A drain is a stateful object that holds a reducing fn and an accumulated value. Drains can be used as composable and reusable building blocks for construction of sequence aggregation.
-This library provides several easy ways to combining multiple drains and to produce a new drain from another one.
+This library provides several easy ways to combining multiple drains and to produce a new drain from another one, and also a couple of custom aggregation functions such as `reduce`, `reductions` and `fold`.
 
 ## Installation
 
