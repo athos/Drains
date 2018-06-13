@@ -4,6 +4,9 @@
             [drains.impl.safe :as impl]
             [drains.protocols :as p]))
 
+(defn ^{:inline (fn [x] `(satisfies? p/IDrain ~x))} drain? [x]
+  (satisfies? p/IDrain x))
+
 (defn drain
   ([rf] (drain rf (rf)))
   ([rf init] (drain nil rf init))
