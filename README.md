@@ -101,6 +101,15 @@ Or, if you want to use the library via [Clojure CLI tool](https://clojure.org/gu
             (range 10)))
 ```
 
+## Related works
+
+- [xforms](https://github.com/cgrand/xforms)
+    - Provides various utility transducers and reducing fns
+    - Those utilities can be effectively used from Drains through drain abstraction
+- [parallel](https://github.com/reborg/parallel)
+    - Defines a version of aggregation fns enabled to perform parallel execution a la `clojure.core.reducers/fold`
+    - Although Drains also provides the `fold` fn for that purpose, `parallel` functions often show better performance for parallel execution in paticular.
+
 ## License
 
 Copyright © 2018 Shogo Ohta
