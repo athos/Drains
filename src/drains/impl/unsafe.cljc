@@ -116,7 +116,11 @@
   p/IDrain
   (-reduced? [this] reduced?)
   (-flush [this input]
-    (set! d (p/-flush d input))
+    (let [d' (p/-flush d input)]
+      (when-not (identical? d d')
+        (set! d d')
+        (when (p/-reduced? d')
+          (set! reduced? true))))
     this)
   (-residual [this]
     (f (p/-residual d))))
