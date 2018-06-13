@@ -1,6 +1,7 @@
 (ns drains.core
   (:refer-clojure :exclude [reduce reductions group-by])
   (:require [clojure.core :as cc]
+            [clojure.core.reducers :as r]
             [drains.impl.safe :as impl]
             [drains.protocols :as p]))
 
@@ -58,3 +59,19 @@
                        (let [drain (p/-flush drain x)]
                          (rec drain (next xs))))))))]
     (rec (impl/->unsafe (impl/unwrap drain)) xs)))
+
+(defn fold
+  ([combinef d xs] (fold 1024 combinef d xs))
+  ([n combinef d xs]
+   (letfn [(combinef'
+             ([] (impl/->unsafe (impl/unwrap d)))
+             ([x y]
+              (let [x (if (drain? x) (p/-residual x) x)
+                    y (if (drain? y) (p/-residual y) y)]
+                (combinef x y))))
+           (reducef [d input]
+             (let [d' (p/-flush d input)]
+               (if (p/-reduced? d')
+                 (reduced d')
+                 d')))]
+     (r/fold n combinef' reducef xs))))
