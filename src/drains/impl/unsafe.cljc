@@ -106,9 +106,9 @@
   (-residual [this]
     (let [[k1 k2 k3] (collect-keys ds)]
       (-> ds
-          (assoc k1 d1)
-          (assoc k2 d2)
-          (assoc k3 d3)))))
+          (assoc k1 (p/-residual d1))
+          (assoc k2 (p/-residual d2))
+          (assoc k3 (p/-residual d3))))))
 
 (deftype UnsafeFmap [f
                      ^:unsynchronized-mutable d
