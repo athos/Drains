@@ -3,13 +3,8 @@
   (:require [clojure.core :as cc]
             [drains.protocols :as p]
             [drains.impl.reduced :as reduced]
-            [drains.impl.unsafe :as unsafe]))
-
-(defn unwrap [x]
-  (if (fn? x) (x) x))
-
-(defn ->unsafe [x]
-  (if (satisfies? p/ToUnsafe x) (p/->unsafe x) x))
+            [drains.impl.unsafe :as unsafe]
+            [drains.impl.utils :as utils]))
 
 (defn drain [xform rf init]
   (fn []
@@ -32,13 +27,10 @@
         (->unsafe [this]
           (unsafe/->UnsafeDrain rf @val))))))
 
-(defn- map-vals [f kvs]
-  (persistent! (reduce-kv #(assoc! %1 %2 (f %3)) (transient kvs) kvs)))
-
 (defn drains [ds]
   (fn []
     (let [ds (cond-> ds (seq? ds) vec)
-          state (volatile! {:ds (map-vals unwrap ds)
+          state (volatile! {:ds (utils/map-vals utils/unwrap ds)
                             :active-keys (reduce-kv (fn [ks k _] (conj ks k)) #{} ds)})]
       (reify
         p/IDrain
@@ -57,13 +49,13 @@
                                (:ds state))))
           this)
         (-residual [this]
-          (map-vals p/-residual (:ds @state)))
+          (utils/map-vals p/-residual (:ds @state)))
         p/Attachable
         (-attach [this xf]
-          (drains (map-vals #(p/-attach % xf) (:ds @state))))
+          (drains (utils/map-vals #(p/-attach % xf) (:ds @state))))
         p/ToUnsafe
         (->unsafe [this]
-          (let [ds (map-vals ->unsafe (:ds @state))]
+          (let [ds (utils/map-vals utils/->unsafe (:ds @state))]
             (or (when (vector? ds)
                   (case (count ds)
                     2 (unsafe/->UnsafeDrains2 (nth ds 0) (nth ds 1) false false ds)
@@ -74,7 +66,7 @@
 
 (defn fmap [f d]
   (fn []
-    (let [d (volatile! (unwrap d))]
+    (let [d (volatile! (utils/unwrap d))]
       (reify
         p/IDrain
         (-reduced? [this]
@@ -89,7 +81,7 @@
           (fmap f (p/-attach @d xf)))
         p/ToUnsafe
         (->unsafe [this]
-          (unsafe/->UnsafeFmap f (->unsafe @d) false))))))
+          (unsafe/->UnsafeFmap f (utils/->unsafe @d) false))))))
 
 (defn group-by [key-fn d]
   (fn []
@@ -104,7 +96,7 @@
                         (make rf true)
                         d)))
                   (-residual [this]
-                    (map-vals p/-residual @ds))
+                    (utils/map-vals p/-residual @ds))
                   p/Attachable
                   (-attach [this xf]
                     #(make (xf rf) reduced?))))

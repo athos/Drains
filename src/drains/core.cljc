@@ -3,6 +3,7 @@
   (:require [clojure.core :as cc]
             [clojure.core.reducers :as r]
             [drains.impl.safe :as impl]
+            [drains.impl.utils :as utils]
             [drains.protocols :as p]))
 
 (defn ^{:inline (fn [x] `(satisfies? p/IDrain ~x))} drain?
@@ -68,7 +69,7 @@
               (range 10))
     ;=> 20"
   [xf d]
-  (p/-attach (impl/unwrap d) xf))
+  (p/-attach (utils/unwrap d) xf))
 
 (defn group-by
   "Returns a drain that manages an isolated copy of the underlying drain for
@@ -90,7 +91,7 @@
   (impl/group-by key-fn d))
 
 (defn open [drain]
-  (impl/unwrap drain))
+  (utils/unwrap drain))
 
 (defn flush! [drain input]
   (p/-flush drain input))
@@ -104,14 +105,14 @@
                  (if (p/-reduced? d')
                    (reduced d')
                    d')))
-             (impl/unwrap drain)
+             (utils/unwrap drain)
              xs))
 
 (defn reduce
   "Aggregation fn analogous to clojure.core/reduce using drains instead of
   reducing fns."
   [drain xs]
-  (p/-residual (into! (impl/->unsafe (impl/unwrap drain)) xs)))
+  (p/-residual (into! (utils/->unsafe (utils/unwrap drain)) xs)))
 
 (defn reductions
   "Aggregation fn analogous to clojure.core/reductions using drains instead of
@@ -124,7 +125,7 @@
                      (when-first [x xs]
                        (let [drain (p/-flush drain x)]
                          (rec drain (next xs))))))))]
-    (rec (impl/->unsafe (impl/unwrap drain)) xs)))
+    (rec (utils/->unsafe (utils/unwrap drain)) xs)))
 
 (defn fold
   "Aggregation fn analogous to clojure.core.reducers/fold using drains instead
@@ -132,7 +133,7 @@
   ([combinef d xs] (fold 1024 combinef d xs))
   ([n combinef d xs]
    (letfn [(combinef'
-             ([] (impl/->unsafe (impl/unwrap d)))
+             ([] (utils/->unsafe (utils/unwrap d)))
              ([x y]
               (let [x (if (drain? x) (p/-residual x) x)
                     y (if (drain? y) (p/-residual y) y)]
