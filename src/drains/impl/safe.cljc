@@ -86,28 +86,32 @@
 (defn group-by [key-fn d]
   (fn []
     (let [ds (volatile! {})]
-      (letfn [(make [rf reduced?]
+      (letfn [(make [rf xfs reduced?]
                 (reify
                   p/IDrain
                   (-reduced? [this] reduced?)
                   (-flush [this input]
                     (let [d (rf this input)]
                       (if (cc/reduced? d)
-                        (make rf true)
+                        (make rf xfs true)
                         d)))
                   (-residual [this]
                     (utils/map-vals p/-residual @ds))
                   p/Attachable
                   (-attach [this xf]
-                    #(make (xf rf) reduced?))))
+                    #(make (xf rf) (cons xf xfs) reduced?))
+                  p/ToUnsafe
+                  (->unsafe [this]
+                    (let [rf' ((apply comp xfs) unsafe/insert!)]
+                      (unsafe/->UnsafeGroupBy key-fn rf' d {})))))
               (insert [this input]
-                (let [key (key-fn input)]
-                  (when-not (contains? @ds key)
-                    (let [d (unwrap d)]
-                      (vswap! ds assoc key d)))
-                  (let [d (get @ds key)
-                        d' (p/-flush d input)]
-                    (when-not (identical? d d')
-                      (vswap! ds assoc key d')))
+                (let [key (key-fn input)
+                      d (or (get @ds key)
+                            (let [d (utils/unwrap d)]
+                              (vswap! ds assoc key d)
+                              d))
+                      d' (p/-flush d input)]
+                  (when-not (identical? d d')
+                    (vswap! ds assoc key d'))
                   this))]
-        (make insert false)))))
+        (make insert '() false)))))

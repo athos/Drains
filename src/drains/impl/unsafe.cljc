@@ -1,7 +1,8 @@
 (ns drains.impl.unsafe
   (:require [clojure.core :as cc]
             [drains.protocols :as p]
-            [drains.impl.reduced :as reduced]))
+            [drains.impl.reduced :as reduced]
+            [drains.impl.utils :as utils]))
 
 (deftype UnsafeDrain [rf ^:unsynchronized-mutable val]
   p/IDrain
@@ -124,3 +125,28 @@
     this)
   (-residual [this]
     (f (p/-residual d))))
+
+(defprotocol Inserter
+  (insert! [this input]))
+
+(deftype UnsafeGroupBy [key-fn rf d ^:unsynchronized-mutable ds]
+  p/IDrain
+  (-reduced? [this] false)
+  (-flush [this input]
+    (let [d (rf this input)]
+      (if (cc/reduced? d)
+        (reduced/->ReducedDrain (p/-residual this))
+        d)))
+  (-residual [this]
+    (reduce-kv #(assoc %1 %2 (p/-residual %3)) ds ds))
+  Inserter
+  (insert! [this input]
+    (let [key (key-fn input)
+          d (or (get ds key)
+                (let [d (utils/->unsafe (utils/unwrap d))]
+                  (set! ds (assoc ds key d))
+                  d))
+          d' (p/-flush d input)]
+      (when-not (identical? d d')
+        (set! ds (assoc ds key d')))
+      this)))
