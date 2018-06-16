@@ -1,6 +1,8 @@
 (ns drains.impl.unsafe
   (:require [clojure.core :as cc]
             [drains.protocols :as p]
+            #?(:clj [drains.impl.macros :refer [def-unsafe-drains-n]]
+               :cljs [drains.impl.macros :refer-macros [def-unsafe-drains-n]])
             [drains.impl.reduced :as reduced]
             [drains.impl.utils :as utils]))
 
@@ -50,66 +52,7 @@
   (update-reduced! [this]
     (set! reduced? true)))
 
-(defn- collect-keys [ds]
-  (reduce-kv (fn [ks k _] (conj ks k)) [] ds))
-
-(deftype UnsafeDrains2 [^:unsynchronized-mutable d1
-                        ^:unsynchronized-mutable d2
-                        ^:unsynchronized-mutable d1-reduced?
-                        ^:unsynchronized-mutable d2-reduced?
-                        ds]
-  p/IDrain
-  (-reduced? [this] (and d1-reduced? d2-reduced?))
-  (-flush [this input]
-    (let [d' (p/-flush d1 input)]
-      (when-not (identical? d1 d')
-        (set! d1 d')
-        (when (p/-reduced? d')
-          (set! d1-reduced? true))))
-    (let [d' (p/-flush d2 input)]
-      (when-not (identical? d2 d')
-        (set! d2 d')
-        (when (p/-reduced? d')
-          (set! d2-reduced? true))))
-    this)
-  (-residual [this]
-    (let [[k1 k2] (collect-keys ds)]
-      (-> ds
-          (assoc k1 (p/-residual d1))
-          (assoc k2 (p/-residual d2))))))
-
-(deftype UnsafeDrains3 [^:unsynchronized-mutable d1
-                        ^:unsynchronized-mutable d2
-                        ^:unsynchronized-mutable d3
-                        ^:unsynchronized-mutable d1-reduced?
-                        ^:unsynchronized-mutable d2-reduced?
-                        ^:unsynchronized-mutable d3-reduced?
-                        ds]
-  p/IDrain
-  (-reduced? [this] (and d1-reduced? d2-reduced? d3-reduced?))
-  (-flush [this input]
-    (let [d' (p/-flush d1 input)]
-      (when-not (identical? d1 d')
-        (set! d1 d')
-        (when (p/-reduced? d')
-          (set! d1-reduced? true))))
-    (let [d' (p/-flush d2 input)]
-      (when-not (identical? d2 d')
-        (set! d2 d')
-        (when (p/-reduced? d')
-          (set! d2-reduced? true))))
-    (let [d' (p/-flush d3 input)]
-      (when-not (identical? d3 d')
-        (set! d3 d')
-        (when (p/-reduced? d')
-          (set! d3-reduced? true))))
-    this)
-  (-residual [this]
-    (let [[k1 k2 k3] (collect-keys ds)]
-      (-> ds
-          (assoc k1 (p/-residual d1))
-          (assoc k2 (p/-residual d2))
-          (assoc k3 (p/-residual d3))))))
+(def-unsafe-drains-n 2 3)
 
 (deftype UnsafeFmap [f
                      ^:unsynchronized-mutable d
