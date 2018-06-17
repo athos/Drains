@@ -6,112 +6,103 @@
             [drains.impl.unsafe :as unsafe]
             [drains.impl.utils :as utils]))
 
+(defrecord Drain [rf val]
+  p/IDrain
+  (-reduced? [this] false)
+  (-flush [this input]
+    (let [val' (rf val input)]
+      (if (reduced? val')
+        (reduced/->ReducedDrain (rf @val'))
+        (assoc this :val val'))))
+  (-residual [this] (rf val))
+  p/Attachable
+  (-attach [this xf]
+    #(update this :rf xf))
+  p/ToUnsafe
+  (->unsafe [this]
+    (unsafe/->UnsafeDrain rf val)))
+
 (defn drain [xform rf init]
   (fn []
-    (let [rf (cond-> rf xform xform)
-          val (volatile! init)]
-      (reify
-        p/IDrain
-        (-reduced? [this] false)
-        (-flush [this input]
-          (let [val' (rf @val input)]
-            (if (reduced? val')
-              (reduced/->ReducedDrain (rf @val'))
-              (do (vreset! val val')
-                  this))))
-        (-residual [this] (rf @val))
-        p/Attachable
-        (-attach [this xf]
-          (drain xf rf @val))
-        p/ToUnsafe
-        (->unsafe [this]
-          (unsafe/->UnsafeDrain rf @val))))))
+    (->Drain (cond-> rf xform xform) init)))
+
+(defrecord Drains [drains active-keys]
+  p/IDrain
+  (-reduced? [this] (empty? active-keys))
+  (-flush [this input]
+    (reduce-kv (fn [this k drain]
+                 (let [drain' (p/-flush drain input)]
+                   (cond-> (assoc-in this [:drains k] drain')
+                     (p/-reduced? drain')
+                     (update :active-keys disj k))))
+               this
+               drains))
+  (-residual [this]
+    (utils/map-vals p/-residual drains))
+  p/Attachable
+  (-attach [this xf]
+    (fn []
+      (let [ds (utils/map-vals #(utils/unwrap (p/-attach % xf)) drains)]
+        (assoc this :drains ds))))
+  p/ToUnsafe
+  (->unsafe [this]
+    (let [ds (utils/map-vals utils/->unsafe drains)]
+      (or (when (vector? ds)
+            (case (count ds)
+              2 (unsafe/->UnsafeDrains2 (nth ds 0) (nth ds 1) false false ds)
+              3 (unsafe/->UnsafeDrains3 (nth ds 0) (nth ds 1) (nth ds 2)
+                                        false false false ds)
+              nil))
+          (unsafe/->UnsafeDrains ds (transient active-keys) false)))))
 
 (defn drains [ds]
-  (fn []
-    (let [ds (cond-> ds (seq? ds) vec)
-          state (volatile! {:ds (utils/map-vals utils/unwrap ds)
-                            :active-keys (reduce-kv (fn [ks k _] (conj ks k)) #{} ds)})]
-      (reify
-        p/IDrain
-        (-reduced? [this] (empty? (:active-keys @state)))
-        (-flush [this input]
-          (vswap! state
-                  (fn [state]
-                    (reduce-kv (fn [state k drain]
-                                 (let [drain' (p/-flush drain input)]
-                                   (if (identical? drain drain')
-                                     state
-                                     (cond-> (update state :ds assoc k drain')
-                                       (p/-reduced? drain')
-                                       (update :active-keys disj k)))))
-                               state
-                               (:ds state))))
-          this)
-        (-residual [this]
-          (utils/map-vals p/-residual (:ds @state)))
-        p/Attachable
-        (-attach [this xf]
-          (drains (utils/map-vals #(p/-attach % xf) (:ds @state))))
-        p/ToUnsafe
-        (->unsafe [this]
-          (let [ds (utils/map-vals utils/->unsafe (:ds @state))]
-            (or (when (vector? ds)
-                  (case (count ds)
-                    2 (unsafe/->UnsafeDrains2 (nth ds 0) (nth ds 1) false false ds)
-                    3 (unsafe/->UnsafeDrains3 (nth ds 0) (nth ds 1) (nth ds 2)
-                                              false false false ds)
-                    nil))
-                (unsafe/->UnsafeDrains ds (transient (:active-keys @state)) false))))))))
+  (let [ds (cond-> ds (seq? ds) vec)]
+    (fn []
+      (->Drains (utils/map-vals utils/unwrap ds)
+                (reduce-kv (fn [ks k _] (conj ks k)) #{} ds)))))
+
+(defrecord Fmap [f drain]
+  p/IDrain
+  (-reduced? [this]
+    (p/-reduced? drain))
+  (-flush [this input]
+    (update this :drain p/-flush input))
+  (-residual [this]
+    (f (p/-residual drain)))
+  p/Attachable
+  (-attach [this xf]
+    #(assoc this :drain (utils/unwrap (p/-attach drain xf))))
+  p/ToUnsafe
+  (->unsafe [this]
+    (unsafe/->UnsafeFmap f (utils/->unsafe drain) false)))
 
 (defn fmap [f d]
-  (fn []
-    (let [d (volatile! (utils/unwrap d))]
-      (reify
-        p/IDrain
-        (-reduced? [this]
-          (p/-reduced? @d))
-        (-flush [this input]
-          (vswap! d p/-flush input)
-          this)
-        (-residual [this]
-          (f (p/-residual @d)))
-        p/Attachable
-        (-attach [this xf]
-          (fmap f (p/-attach @d xf)))
-        p/ToUnsafe
-        (->unsafe [this]
-          (unsafe/->UnsafeFmap f (utils/->unsafe @d) false))))))
+  (fn [] (->Fmap f (utils/unwrap d))))
+
+(defrecord GroupBy [key-fn rf xfs drain drains reduced?]
+  p/IDrain
+  (-reduced? [this] reduced?)
+  (-flush [this input]
+    (let [d (rf this input)]
+      (if (cc/reduced? d)
+        (assoc @d :reduced? true)
+        d)))
+  (-residual [this]
+    (utils/map-vals p/-residual drains))
+  p/Attachable
+  (-attach [this xf]
+    #(assoc this :rf (xf rf) :xfs (cons xf xfs)))
+  p/ToUnsafe
+  (->unsafe [this]
+    (let [rf' ((apply comp xfs) unsafe/insert!)]
+      (unsafe/->UnsafeGroupBy key-fn rf' drain {}))))
 
 (defn group-by [key-fn d]
-  (fn []
-    (let [ds (volatile! {})]
-      (letfn [(make [rf xfs reduced?]
-                (reify
-                  p/IDrain
-                  (-reduced? [this] reduced?)
-                  (-flush [this input]
-                    (let [d (rf this input)]
-                      (if (cc/reduced? d)
-                        (make rf xfs true)
-                        d)))
-                  (-residual [this]
-                    (utils/map-vals p/-residual @ds))
-                  p/Attachable
-                  (-attach [this xf]
-                    #(make (xf rf) (cons xf xfs) reduced?))
-                  p/ToUnsafe
-                  (->unsafe [this]
-                    (let [rf' ((apply comp xfs) unsafe/insert!)]
-                      (unsafe/->UnsafeGroupBy key-fn rf' d {})))))
-              (insert [this input]
-                (let [key (key-fn input)
-                      d (or (get @ds key)
-                            (let [d (utils/unwrap d)]
-                              (vswap! ds assoc key d)
-                              d))
+  (letfn [(insert [this input]
+            (let [key (key-fn input)]
+              (if-let [d (get (:drains this) key)]
+                (update-in this [:drains key] p/-flush input)
+                (let [d (utils/unwrap d)
                       d' (p/-flush d input)]
-                  (when-not (identical? d d')
-                    (vswap! ds assoc key d'))
-                  this))]
-        (make insert '() false)))))
+                  (assoc-in this [:drains key] d')))))]
+    (fn [] (->GroupBy key-fn insert '() d {} false))))
