@@ -4,7 +4,9 @@
             [drains.core :as d]))
 
 (deftest drain-test
-  (are [d input expected] (= expected (d/reduce d input))
+  (are [d input expected] (= expected
+                             (d/reduce d input)
+                             (d/residual (d/into (d/open d) input)))
     (d/drain +)
     (range 10)
     45
@@ -26,7 +28,9 @@
     45))
 
 (deftest drains-test
-  (are [d input expected] (= expected (d/reduce d input))
+  (are [d input expected] (= expected
+                             (d/reduce d input)
+                             (d/residual (d/into (d/open d) input)))
     (d/drains [(d/drain +)
                (d/drain str)])
     (range 10)
@@ -48,7 +52,9 @@
     [0 4]))
 
 (deftest fmap-test
-  (are [d input expected] (= expected (d/reduce d input))
+  (are [d input expected] (= expected
+                             (d/reduce d input)
+                             (d/residual (d/into (d/open d) input)))
     (d/fmap (fn [sum] {:sum sum})
             (d/drain +))
     (range 10)
@@ -70,7 +76,9 @@
     "46"))
 
 (deftest combine-with
-  (are [d input expected] (= expected (d/reduce d input))
+  (are [d input expected] (= expected
+                             (d/reduce d input)
+                             (d/residual (d/into (d/open d) input)))
     (d/combine-with (fn [sum count] (/ sum (double count)))
                     (d/drain +)
                     (d/drain (map (constantly 1)) + 0))
@@ -78,7 +86,9 @@
     4.5))
 
 (deftest with-test
-  (are [d input expected] (= expected (d/reduce d input))
+  (are [d input expected] (= expected
+                             (d/reduce d input)
+                             (d/residual (d/into (d/open d) input)))
     (d/with (filter even?)
             (d/drain (map inc) + 0))
     (range 1 11)
@@ -124,7 +134,9 @@
     ["1" "2" "3" "4" "5"]))
 
 (deftest group-by-test
-  (are [d input expected] (= expected (d/reduce d input))
+  (are [d input expected] (= expected
+                             (d/reduce d input)
+                             (d/residual (d/into (d/open d) input)))
     (d/group-by #(rem % 3)
                 (d/drain conj))
     (range 10)
