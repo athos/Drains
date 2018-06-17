@@ -1,5 +1,5 @@
 (ns drains.core
-  (:refer-clojure :exclude [reduce reductions group-by])
+  (:refer-clojure :exclude [flush group-by into reduce reductions])
   (:require [clojure.core :as cc]
             [clojure.core.reducers :as r]
             [drains.impl.safe :as impl]
@@ -93,13 +93,13 @@
 (defn open [drain]
   (utils/unwrap drain))
 
-(defn flush! [drain input]
+(defn flush [drain input]
   (p/-flush drain input))
 
 (defn residual [drain]
   (p/-residual drain))
 
-(defn into! [drain xs]
+(defn into [drain xs]
   (cc/reduce (fn [d input]
                (let [d' (p/-flush d input)]
                  (if (p/-reduced? d')
@@ -112,7 +112,7 @@
   "Aggregation fn analogous to clojure.core/reduce using drains instead of
   reducing fns."
   [drain xs]
-  (p/-residual (into! (utils/->unsafe (utils/unwrap drain)) xs)))
+  (p/-residual (into (utils/->unsafe (utils/unwrap drain)) xs)))
 
 (defn reductions
   "Aggregation fn analogous to clojure.core/reductions using drains instead of
