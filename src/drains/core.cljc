@@ -143,4 +143,7 @@
                (if (p/-reduced? d')
                  (reduced d')
                  d')))]
-     (r/fold n combinef' reducef xs))))
+     (let [ret (r/fold n combinef' reducef xs)]
+       (if (drain? ret)
+         (p/-residual ret)
+         ret)))))
