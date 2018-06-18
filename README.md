@@ -1,6 +1,7 @@
 # Drains
 [![Clojars Project](https://img.shields.io/clojars/v/drains.svg)](https://clojars.org/drains)
 [![CircleCI](https://circleci.com/gh/athos/Drains.svg?style=shield)](https://circleci.com/gh/athos/Drains)
+[![codecov](https://codecov.io/gh/athos/Drains/branch/master/graph/badge.svg)](https://codecov.io/gh/athos/Drains)
 
 Drains: A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)
 
