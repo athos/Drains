@@ -167,3 +167,27 @@
                         (d/drain conj)))
     (range 10)
     {0 [0], 1 [1], 2 [2]}))
+
+(deftest reductions-test
+  (are [d input expected] (= expected (d/reductions d input))
+    (d/drain +)
+    (range 5)
+    [0 0 1 3 6 10]
+
+    (d/with (take 5)
+            (d/drains [(d/drain (filter even?) + 0)
+                       (d/drain (filter odd?) + 0)]))
+    (range)
+    [[0 0] [0 0] [0 1] [2 1] [2 4] [6 4]]))
+
+(deftest fold-test
+  (are [f d input expected] (= expected (d/fold f d input))
+    +
+    (d/drain +)
+    (vec (range 10))
+    45
+
+    max
+    (d/drain max ##-Inf)
+    (vec (range 1000000))
+    999999))
