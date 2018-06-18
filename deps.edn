@@ -4,4 +4,7 @@
  :aliases
  {:test {:extra-paths ["test"]
          :main-opts ["-m" "drains.test-runner"]}
-  :test-cljs {:main-opts ["-m" "cljs.main" "-re" "nashorn" "-m" "drains.test-runner"]}}}
+  :test-cljs {:main-opts ["-m" "cljs.main" "-re" "nashorn" "-m" "drains.test-runner"]}
+  :coverage {:extra-deps {cloverage {:mvn/version "1.0.11-SNAPSHOT"}
+                          org.tcrawley/dynapath {:mvn/version "1.0.0"}}
+             :main-opts ["-m" "drains.test-coverage"]}}}

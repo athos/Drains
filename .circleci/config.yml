@@ -32,3 +32,9 @@ jobs:
       - run:
           name: test CLJS
           command: clojure -A:test:test-cljs
+
+      - run:
+          name: test coverage
+          command: |
+            clojure -A:test:coverage
+            bash <(curl -s https://codecov.io/bash)
