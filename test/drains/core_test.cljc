@@ -1,6 +1,6 @@
 (ns drains.core-test
   (:require [clojure.string :as str]
-            [clojure.test :refer [deftest are]]
+            [clojure.test :refer [deftest is are]]
             [drains.core :as d]))
 
 (deftest drain-test
@@ -181,13 +181,5 @@
     [[0 0] [0 0] [0 1] [2 1] [2 4] [6 4]]))
 
 (deftest fold-test
-  (are [f d input expected] (= expected (d/fold f d input))
-    +
-    (d/drain +)
-    (vec (range 10))
-    45
-
-    max
-    (d/drain max ##-Inf)
-    (vec (range 1000000))
-    999999))
+  (= 45 (d/fold + (d/drain +) (vec (range 10))))
+  (= 999 (d/fold max (d/drain max ##-Inf) (vec (range 1000)))))
