@@ -29,7 +29,7 @@ If you would rather use an unstable version of the library via [Clojure CLI tool
 
 To use this library, first require the `drains.core` ns as follows:
 
-```
+```clj
 (require '[drains.core :as d])
 ```
 
