@@ -92,6 +92,12 @@ An interesting nature of drains is that they can be composed easily. `d/drains` 
                      :odds (d/drain (filter odd?) conj [])})
           (range 10))
 ;=> {:evens [0 2 4 6 8], :odds [1 3 5 7 9]}
+
+(d/reduce (d/drains {:sum (d/drain +)
+                     :range (d/drains {:min (d/drain min ##Inf)
+                                       :max (d/drain max ##-Inf)})})
+          [3 1 4 1 5 9 2])
+;=> {:sum 25, :range {:min 1, :max 9}}
 ```
 
 `d/drains` can compose an arbitrary number of drains and can also be nested arbitrarily. Even in such cases, the sequence aggregation will be done in a one-pass process.
@@ -138,7 +144,7 @@ In particular, `(d/with xf (d/drain op val))` is equivalent to `(d/drain xf op v
 
 ### `d/group-by`
 
-Another convenient facility is `d/group-by`. `d/group-by` creates a fresh drain every time it encounters a new key value (calculated with the specified key-fn), and manages each respectively through the aggregation:
+Another convenient facility is `d/group-by`. `d/group-by` creates a fresh copy of the given drain every time it encounters a new key value (calculated with the specified key-fn), and manages each respectively through the aggregation:
 
 ```clj
 (d/reduce (d/group-by even? (d/drain conj))
