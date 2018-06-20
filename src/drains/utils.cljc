@@ -1,5 +1,5 @@
 (ns drains.utils
-  (:refer-clojure :exclude [count frequencies min max])
+  (:refer-clojure :exclude [count frequencies min max sort sort-by])
   (:require [clojure.core :as cc]
             [drains.core :as d]))
 
@@ -45,3 +45,11 @@
   ([f] (max-by f ##-Inf))
   ([f init]
    (d/with (map f) (max init))))
+
+(defn sort-by [f]
+  (d/drain (completing #(update %1 (f %2) (fnil conj []) %2)
+                       #(apply concat (vals %)))
+           (sorted-map)))
+
+(defn sort []
+  (sort-by identity))
