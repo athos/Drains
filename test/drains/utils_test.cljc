@@ -14,6 +14,13 @@
   (is (= 10 (d/reduce (dutils/count) (range 10))))
   (is (= 110 (d/reduce (dutils/count 100) (range 10)))))
 
+(deftest frequencies-test
+  (is (= {0 1, 2 2, 3 3, 4 2}
+         (d/reduce (dutils/frequencies) [2 4 2 3 0 3 3 4])))
+  (is (= {1 3, 2 1, 3 2}
+         (d/reduce (d/with (map :x) (dutils/frequencies))
+                   [{:x 1} {:x 3} {:x 1} {:x 2} {:x 3} {:x 1}]))))
+
 (deftest average-test
   (is (= 4.5 (d/reduce (dutils/average) (range 10)))))
 

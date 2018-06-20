@@ -1,5 +1,5 @@
 (ns drains.utils
-  (:refer-clojure :exclude [count min max])
+  (:refer-clojure :exclude [count frequencies min max])
   (:require [clojure.core :as cc]
             [drains.core :as d]))
 
@@ -17,6 +17,9 @@
   ([] (count 0))
   ([init]
    (d/drain (completing (fn [n _] (inc n))) init)))
+
+(defn frequencies []
+  (d/group-by identity (count)))
 
 (defn average []
   (d/combine-with (fn [sum count] (/ sum (double count)))
