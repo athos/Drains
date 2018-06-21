@@ -5,8 +5,8 @@
 
 Drains: A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)
 
-A drain is a stateful object that holds a reducing fn and an accumulated value. Drains can be used as composable and reusable building blocks for construction of sequence aggregation.
-This library provides several easy ways to combining multiple drains and to produce a new drain from another one, and also a couple of custom aggregation functions such as `reduce`, `reductions` and `fold`.
+A drain is a stateful object that consists of a reducing fn and an accumulated value. Drains can be used as composable and reusable building blocks for construction of sequence aggregation.
+This library provides several easy ways to combining multiple drains and to produce a new drain from another one, and also provides a couple of custom aggregation functions such as `reduce`, `reductions` and `fold`.
 
 ## Installation
 
@@ -53,7 +53,7 @@ Using the `d/reduce`, you can aggregate a sequence like `clojure.core/reduce`:
 ;=> 10
 ```
 
-`d/drain` can optionally take a [transducer](https://clojure.org/reference/transducers), in which case the transducer will be applied to the reducing fn:
+`d/drain` optionally takes a [transducer](https://clojure.org/reference/transducers), in which case the transducer will be applied to the reducing fn:
 
 ```clj
 (d/reduce (d/drain (map inc) conj [])
@@ -69,7 +69,7 @@ In general, `(d/reduce (d/drain xf op val) xs)` is semantically equal to `(trans
 
 ### `d/drains`
 
-An interesting nature of drains is that they can be composed easily. `d/drains` is the simplest way to compose existing drains:
+An interesting nature of drains is that they can be composed surprisingly easily. `d/drains` is the simplest way to compose existing drains:
 
 ```clj
 (d/reduce (d/drains [(d/drain conj)
@@ -82,7 +82,7 @@ An interesting nature of drains is that they can be composed easily. `d/drains` 
           [3 1 4 1 5 9 2])
 ;=> [1 9]
 
-;; d/drains can also take a map instead of a vector
+;; d/drains can also take a map, not only a vector
 (d/reduce (d/drains {:min (d/drain min ##Inf)
                      :max (d/drain max ##-Inf)})
           [3 1 4 1 5 9 2])
@@ -100,11 +100,11 @@ An interesting nature of drains is that they can be composed easily. `d/drains` 
 ;=> {:sum 25, :range {:min 1, :max 9}}
 ```
 
-`d/drains` can compose an arbitrary number of drains and can also be nested arbitrarily. Even in such cases, the sequence aggregation will be done in a one-pass process.
+`d/drains` can compose an arbitrary number of drains and can also be nested arbitrarily. Even in such cases, the sequence aggregation will be done in a single pass.
 
 ### `d/fmap`, `d/combine-with`
 
-`d/fmap` is another way to create a drain from another existing drain. It enables to transform the resulting aggregation value:
+`d/fmap` is another way to create a drain from another drain. It enables to transform the resulting aggregation value:
 
 ```clj
 (d/reduce (d/fmap (fn [sum] {:sum sum})
@@ -119,7 +119,7 @@ An interesting nature of drains is that they can be composed easily. `d/drains` 
 ;=> {:average 4.5}
 ```
 
-`d/combine-with` is the alias of the combination of `d/drains` and `d/fmap`. With `d/combine-with`, you can rewrite the above example code like the following:
+The combination of `d/drains` and `d/fmap` is useful and relatively common, so Drains provides the alias for that: `d/combine-with`. With `d/combine-with`, you can rewrite the example code above like the following:
 
 ```clj
 (d/reduce (d/combine-with (fn [sum count] {:average (/ sum (double count))})
@@ -144,7 +144,7 @@ In particular, `(d/with xf (d/drain op val))` is equivalent to `(d/drain xf op v
 
 ### `d/group-by`
 
-Another convenient facility is `d/group-by`. `d/group-by` creates a fresh copy of the given drain every time it encounters a new key value (calculated with the specified key-fn), and manages each respectively through the aggregation:
+Another convenient facility is `d/group-by`. `d/group-by` creates a fresh copy of the given drain every time it encounters a new key value (calculated with the specified key-fn), and manages each of the copies respectively through the aggregation:
 
 ```clj
 (d/reduce (d/group-by even? (d/drain conj))
