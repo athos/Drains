@@ -37,3 +37,11 @@
 
 (deftest max-by-test
   (is (= 4 (d/reduce (dutils/max-by :x) [{:x 3} {:x 1} {:x 4}]))))
+
+(deftest sort-test
+  (is (= [1 1 2 3 4 5 6 9]
+         (d/reduce (dutils/sort) [3 1 4 1 5 9 2 6]))))
+
+(deftest sort-by-test
+  (is (= [{:x 1} {:x 3} {:x 4}]
+         (d/reduce (dutils/sort-by :x) [{:x 3} {:x 1} {:x 4}]))))
