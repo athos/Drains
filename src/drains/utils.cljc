@@ -36,15 +36,17 @@
   ([init]
    (d/drain cc/max init)))
 
-(defn min-by
-  ([f] (min-by f ##Inf))
-  ([f init]
-   (d/with (map f) (min init))))
+(defn min-by [f init]
+  (d/drain (completing
+            (fn [x y]
+              (if (< (f x) (f y)) x y)))
+           init))
 
-(defn max-by
-  ([f] (max-by f ##-Inf))
-  ([f init]
-   (d/with (map f) (max init))))
+(defn max-by [f init]
+  (d/drain (completing
+            (fn [x y]
+              (if (> (f x) (f y)) x y)))
+           init))
 
 (defn sort-by [f]
   (d/drain (completing #(update %1 (f %2) (fnil conj []) %2)

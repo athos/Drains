@@ -29,14 +29,18 @@
   (is (= -1 (d/reduce (dutils/min -1) [3 1 4 1 5 9 2 6]))))
 
 (deftest min-by-test
-  (is (= 1 (d/reduce (dutils/min-by :x) [{:x 3} {:x 1} {:x 4}]))))
+  (is (= {:x 1}
+         (d/reduce (dutils/min-by :x {:x ##Inf})
+                   [{:x 3} {:x 1} {:x 4}]))))
 
 (deftest max-test
   (is (= 9 (d/reduce (dutils/max) [3 1 4 1 5 9 2 6])))
   (is (= 100 (d/reduce (dutils/max 100) [3 1 4 1 5 9 2 6]))))
 
 (deftest max-by-test
-  (is (= 4 (d/reduce (dutils/max-by :x) [{:x 3} {:x 1} {:x 4}]))))
+  (is (= {:x 4}
+         (d/reduce (dutils/max-by :x {:x ##-Inf})
+                   [{:x 3} {:x 1} {:x 4}]))))
 
 (deftest sort-test
   (is (= [1 1 2 3 4 5 6 9]
