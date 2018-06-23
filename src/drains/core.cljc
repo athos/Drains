@@ -26,15 +26,15 @@
 (defn drains
   "Returns a drain that manages multiple underlying drains.
 
-  ds can be a vector or a map. The resulting value of aggregation will be
-  the same form as ds. Thus, the result of the following expression will be
-  `[0 9]`:
+  ds can be either a vector or a map. The resulting value of aggregation will be
+  the same form as ds. Thus, for example, the result of the following expression
+  will be `[0 9]`:
 
     (require '[drains.core :as d])
     (d/reduce (d/drains [(d/drain min ##Inf) (d/drain max ##-Inf)])
               (range 10))
 
-  whereas that of the following will be `{:min 0, :max 9}`:
+  whereas the following will result in `{:min 0, :max 9}`:
 
     (d/reduce (d/drains {:min (d/drain min ##Inf)
                          :max (d/drain max ##-Inf)})
@@ -109,14 +109,14 @@
              xs))
 
 (defn reduce
-  "Aggregation fn analogous to clojure.core/reduce using drains instead of
-  reducing fns."
+  "Aggregation fn analogous to clojure.core/reduce accepting a drain instead of
+  a reducing fn."
   [drain xs]
   (p/-residual (into (utils/->unsafe (utils/unwrap drain)) xs)))
 
 (defn reductions
-  "Aggregation fn analogous to clojure.core/reductions using drains instead of
-  reducing fns."
+  "Aggregation fn analogous to clojure.core/reductions accepting a drain instead of
+  a reducing fn."
   [drain xs]
   (letfn [(rec [drain xs]
             (lazy-seq
@@ -128,8 +128,8 @@
     (rec (utils/->unsafe (utils/unwrap drain)) xs)))
 
 (defn fold
-  "Aggregation fn analogous to clojure.core.reducers/fold using drains instead
-  of reducing fns."
+  "Aggregation fn analogous to clojure.core.reducers/fold accepting a drain instead
+  of a reducing fn."
   ([combinef d xs] (fold 1024 combinef d xs))
   ([n combinef d xs]
    (letfn [(combinef'

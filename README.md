@@ -160,7 +160,7 @@ Another convenient facility is `d/group-by`. `d/group-by` creates a fresh copy o
 ;    2 {:items [2 5 8], :sum 15}}
 ```
 
-Note that attaching a transducer to a drain constructed with `d/group-by` may cause a different result from the one gained by attaching the transducer to the underlying drain. For example:
+Note that attaching a transducer to a drain constructed with `d/group-by` may cause a different result from the one obtained by attaching the transducer to the underlying drain. For example:
 
 ```clj
 (d/reduce (d/with (take 5)
