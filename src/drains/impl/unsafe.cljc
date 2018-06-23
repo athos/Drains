@@ -69,9 +69,6 @@
   (-residual [this]
     (f (p/-residual d))))
 
-(defprotocol Inserter
-  (insert! [this input]))
-
 (deftype UnsafeGroupBy [key-fn rf d ^:unsynchronized-mutable ds]
   p/IDrain
   (-reduced? [this] false)
@@ -82,8 +79,8 @@
         d)))
   (-residual [this]
     (reduce-kv #(assoc %1 %2 (p/-residual %3)) ds ds))
-  Inserter
-  (insert! [this input]
+  p/Inserter
+  (-insert! [this input]
     (let [key (key-fn input)
           d (or (get ds key)
                 (let [d (utils/->unsafe (utils/unwrap d))]

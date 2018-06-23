@@ -11,3 +11,6 @@
 
 (defprotocol ToUnsafe
   (->unsafe [this]))
+
+(defprotocol Inserter
+  (-insert! [this input]))
