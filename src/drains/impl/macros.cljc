@@ -18,13 +18,13 @@
                ~@(map #(with-meta % {:unsynchronized-mutable true}) reduced?-syms)
                ~'ds]
             p/IDrain
-            (~'-reduced? [this#] (and ~@reduced?-syms))
-            (~'-flush [this# input#]
+            (-reduced? [this#] (and ~@reduced?-syms))
+            (-flush [this# input#]
              (let [d# (~'rf this# input#)]
                (if (cc/reduced? d#)
                  (reduced/->ReducedDrain (p/-residual this#))
                  this#)))
-            (~'-residual [this#]
+            (-residual [this#]
              ~(let [ks (map (fn [_] (gensym 'k)) d-syms)]
                 `(let [~(vec ks) (collect-keys ~'ds)]
                    (-> ~'ds
