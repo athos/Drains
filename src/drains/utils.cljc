@@ -1,5 +1,5 @@
 (ns drains.utils
-  (:refer-clojure :exclude [count frequencies min max sort sort-by])
+  (:refer-clojure :exclude [count frequencies max max-key min min-key sort sort-by])
   (:require [clojure.core :as cc]
             [drains.core :as d]))
 
@@ -36,13 +36,13 @@
   ([init]
    (d/drain cc/max init)))
 
-(defn min-by [f init]
+(defn min-key [f init]
   (d/drain (completing
             (fn [x y]
               (if (< (f x) (f y)) x y)))
            init))
 
-(defn max-by [f init]
+(defn max-key [f init]
   (d/drain (completing
             (fn [x y]
               (if (> (f x) (f y)) x y)))
