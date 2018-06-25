@@ -12,5 +12,6 @@
 (defprotocol ToUnsafe
   (->unsafe [this]))
 
-(defprotocol Inserter
-  (-insert! [this input]))
+;; intended for internal use
+(defprotocol Updater
+  (-update! [this input]))

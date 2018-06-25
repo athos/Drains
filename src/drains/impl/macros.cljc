@@ -30,8 +30,8 @@
                    (-> ~'ds
                        ~@(for [[k d] (map vector ks d-syms)]
                            `(assoc ~k (p/-residual ~d)))))))
-            p/Inserter
-            (-insert! [this# ~'input]
+            p/Updater
+            (-update! [this# ~'input]
               ~@(for [[d reduced?] (map vector d-syms reduced?-syms)]
                   `(let [d# (p/-flush ~d ~'input)]
                      (when-not (identical? ~d d#)

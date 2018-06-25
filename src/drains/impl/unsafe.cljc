@@ -45,8 +45,8 @@
   ReducedUpdater
   (update-reduced! [this]
     (set! reduced? true))
-  p/Inserter
-  (-insert! [this input]
+  p/Updater
+  (-update! [this input]
     (reduce-kv (fn [_ k drain]
                  (let [drain' (p/-flush drain input)]
                    (when-not (identical? drain drain')
@@ -85,8 +85,8 @@
         d)))
   (-residual [this]
     (reduce-kv #(assoc %1 %2 (p/-residual %3)) ds ds))
-  p/Inserter
-  (-insert! [this input]
+  p/Updater
+  (-update! [this input]
     (let [key (key-fn input)
           d (or (get ds key)
                 (let [d (utils/->unsafe (utils/unwrap d))]

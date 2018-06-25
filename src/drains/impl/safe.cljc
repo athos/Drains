@@ -41,7 +41,7 @@
     #(assoc this :rf (xf rf) :xfs (cons xf xfs)))
   p/ToUnsafe
   (->unsafe [this]
-    (let [rf' ((apply comp xfs) p/-insert!)
+    (let [rf' ((apply comp xfs) p/-update!)
           ds (utils/map-vals utils/->unsafe drains)
           ds' (reduce-kv (fn [ds _ d] (conj ds d)) [] ds)]
       (case (count ds)
@@ -99,7 +99,7 @@
     #(assoc this :rf (xf rf) :xfs (cons xf xfs)))
   p/ToUnsafe
   (->unsafe [this]
-    (let [rf' ((apply comp xfs) p/-insert!)]
+    (let [rf' ((apply comp xfs) p/-update!)]
       (unsafe/->UnsafeGroupBy key-fn rf' drain {}))))
 
 (defn group-by [key-fn d]
