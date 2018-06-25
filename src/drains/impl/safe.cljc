@@ -26,39 +26,44 @@
   (fn []
     (->Drain (cond-> rf xform xform) init)))
 
-(defrecord Drains [drains active-keys]
+(defrecord Drains [drains rf xfs active-keys]
   p/IDrain
   (-reduced? [this] (empty? active-keys))
   (-flush [this input]
-    (reduce-kv (fn [this k drain]
-                 (let [drain' (p/-flush drain input)]
-                   (cond-> (assoc-in this [:drains k] drain')
-                     (p/-reduced? drain')
-                     (update :active-keys disj k))))
-               this
-               drains))
+    (let [d (rf this input)]
+      (if (reduced? d)
+        (reduced/->ReducedDrain (p/-residual this))
+        d)))
   (-residual [this]
     (utils/map-vals p/-residual drains))
   p/Attachable
   (-attach [this xf]
-    (fn []
-      (let [ds (utils/map-vals #(utils/unwrap (p/-attach % xf)) drains)]
-        (assoc this :drains ds))))
+    #(assoc this :rf (xf rf) :xfs (cons xf xfs)))
   p/ToUnsafe
   (->unsafe [this]
-    (let [ds (utils/map-vals utils/->unsafe drains)]
-      (or (when (vector? ds)
-            (case (count ds)
-              2 (unsafe/->UnsafeDrains2 (nth ds 0) (nth ds 1) false false ds)
-              3 (unsafe/->UnsafeDrains3 (nth ds 0) (nth ds 1) (nth ds 2)
-                                        false false false ds)
-              nil))
-          (unsafe/->UnsafeDrains ds (transient active-keys) false)))))
+    (let [rf' ((apply comp xfs) p/-insert!)
+          ds (utils/map-vals utils/->unsafe drains)
+          ds' (reduce-kv (fn [ds _ d] (conj ds d)) [] ds)]
+      (case (count ds)
+        2 (unsafe/->UnsafeDrains2 rf' (nth ds' 0) (nth ds' 1) false false ds)
+        3 (unsafe/->UnsafeDrains3 rf' (nth ds' 0) (nth ds' 1) (nth ds' 2)
+                                  false false false ds)
+        (unsafe/->UnsafeDrains rf' ds (transient active-keys) false)))))
 
 (defn drains [ds]
-  (let [ds (cond-> ds (seq? ds) vec)]
+  (let [ds (cond-> ds (seq? ds) vec)
+        insert (fn [this input]
+                 (reduce-kv (fn [this k drain]
+                              (let [drain' (p/-flush drain input)]
+                                (cond-> (assoc-in this [:drains k] drain')
+                                  (p/-reduced? drain')
+                                  (update :active-keys disj k))))
+                            this
+                            (:drains this)))]
     (fn []
       (->Drains (utils/map-vals utils/unwrap ds)
+                insert
+                '()
                 (reduce-kv (fn [ks k _] (conj ks k)) #{} ds)))))
 
 (defrecord Fmap [f drain]
