@@ -93,6 +93,9 @@
 (defn open [drain]
   (utils/unwrap drain))
 
+(defn ->unsafe [drain]
+  (utils/->unsafe drain))
+
 (defn flush [drain input]
   (p/-flush drain input))
 
