@@ -21,7 +21,7 @@
 (defn frequencies []
   (d/group-by identity (count)))
 
-(defn average []
+(defn mean []
   (d/combine-with (fn [sum count] (/ sum (double count)))
                   (sum)
                   (count)))

@@ -21,8 +21,8 @@
          (d/reduce (d/with (map :x) (dutils/frequencies))
                    [{:x 1} {:x 3} {:x 1} {:x 2} {:x 3} {:x 1}]))))
 
-(deftest average-test
-  (is (= 4.5 (d/reduce (dutils/average) (range 10)))))
+(deftest mean-test
+  (is (= 4.5 (d/reduce (dutils/mean) (range 10)))))
 
 (deftest min-test
   (is (= 1 (d/reduce (dutils/min) [3 1 4 1 5 9 2 6])))
