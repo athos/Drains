@@ -7,4 +7,8 @@
   :test-cljs {:main-opts ["-m" "cljs.main" "-re" "nashorn" "-m" "drains.test-runner"]}
   :coverage {:extra-deps {cloverage {:mvn/version "1.0.11-SNAPSHOT"}
                           org.tcrawley/dynapath {:mvn/version "1.0.0"}}
-             :main-opts ["-m" "drains.test-coverage"]}}}
+             :main-opts ["-m" "drains.test-coverage"]}
+  :bench {:extra-paths ["benchmarks"]
+          :extra-deps {criterium {:mvn/version "0.4.4"}
+                       net.totakke/libra {:mvn/version "0.1.1"}}
+          :main-opts ["-m" "drains.bench"]}}}
