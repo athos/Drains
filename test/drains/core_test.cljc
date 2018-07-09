@@ -1,7 +1,8 @@
 (ns drains.core-test
   (:require [clojure.string :as str]
             [clojure.test :refer [deftest is are]]
-            [drains.core :as d]))
+            [drains.core :as d]
+            [drains.test-common :refer [POS_INF NEG_INF]]))
 
 (deftest drain-test
   (are [d input expected] (= expected
@@ -36,8 +37,8 @@
     (range 10)
     [45 "0123456789"]
 
-    (d/drains {:min (d/drain min ##Inf)
-               :max (d/drain max ##-Inf)})
+    (d/drains {:min (d/drain min POS_INF)
+               :max (d/drain max NEG_INF)})
     [3 1 4 1 5 9 2 6 5]
     {:min 1 :max 9}
 
@@ -46,8 +47,8 @@
     (range 10)
     [10 35]
 
-    (d/drains [(d/drain (take 5) min ##Inf)
-               (d/drain (take 5) max ##-Inf)])
+    (d/drains [(d/drain (take 5) min POS_INF)
+               (d/drain (take 5) max NEG_INF)])
     (range)
     [0 4]))
 
@@ -61,8 +62,8 @@
     {:sum 45}
 
     (d/fmap (fn [[min max]] {:min min :max max})
-            (d/drains [(d/drain min ##Inf)
-                       (d/drain max ##-Inf)]))
+            (d/drains [(d/drain min POS_INF)
+                       (d/drain max NEG_INF)]))
     [3 1 4 1 5 9 2 6 5]
     {:min 1 :max 9}
 
@@ -110,8 +111,8 @@
     6
 
     (d/with (filter even?)
-            (d/drains [(d/drain min ##Inf)
-                       (d/drain max ##-Inf)]))
+            (d/drains [(d/drain min POS_INF)
+                       (d/drain max NEG_INF)]))
     [3 1 4 1 5 9 2 6 5]
     [2 6]
 
@@ -182,4 +183,4 @@
 
 (deftest fold-test
   (= 45 (d/fold + (d/drain +) (vec (range 10))))
-  (= 999 (d/fold max (d/drain max ##-Inf) (vec (range 1000)))))
+  (= 999 (d/fold max (d/drain max NEG_INF) (vec (range 1000)))))

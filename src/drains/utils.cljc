@@ -27,12 +27,16 @@
                   (count)))
 
 (defn min
-  ([] (min ##Inf))
+  ([] (min ;; ##Inf
+           #?(:clj Double/POSITIVE_INFINITY
+              :cljs js/Infinity)))
   ([init]
    (d/drain cc/min init)))
 
 (defn max
-  ([] (max ##-Inf))
+  ([] (max ;; ##-Inf
+           #?(:clj Double/NEGATIVE_INFINITY
+              :cljs js/-Infinity)))
   ([init]
    (d/drain cc/max init)))
 

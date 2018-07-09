@@ -1,7 +1,8 @@
 (ns drains.utils-test
   (:require [clojure.test :refer [deftest is are]]
             [drains.core :as d]
-            [drains.utils :as dutils]))
+            [drains.utils :as dutils]
+            [drains.test-common :refer [POS_INF NEG_INF]]))
 
 (deftest sum-test
   (is (= 45 (d/reduce (dutils/sum) (range 10))))
@@ -30,7 +31,7 @@
 
 (deftest min-key-test
   (is (= {:x 1}
-         (d/reduce (dutils/min-key :x {:x ##Inf})
+         (d/reduce (dutils/min-key :x {:x POS_INF})
                    [{:x 3} {:x 1} {:x 4}]))))
 
 (deftest max-test
@@ -39,7 +40,7 @@
 
 (deftest max-key-test
   (is (= {:x 4}
-         (d/reduce (dutils/max-key :x {:x ##-Inf})
+         (d/reduce (dutils/max-key :x {:x NEG_INF})
                    [{:x 3} {:x 1} {:x 4}]))))
 
 (deftest sort-test
