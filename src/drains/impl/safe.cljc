@@ -32,7 +32,7 @@
   (-flush [this input]
     (let [d (rf this input)]
       (if (reduced? d)
-        (reduced/->ReducedDrain (p/-residual this))
+        (reduced/->ReducedDrain (p/-residual @d))
         d)))
   (-residual [this]
     (utils/map-vals p/-residual drains))
