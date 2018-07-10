@@ -99,8 +99,10 @@
     #(assoc this :rf (xf rf) :xfs (cons xf xfs)))
   p/ToUnsafe
   (->unsafe [this]
-    (let [rf' ((apply comp xfs) p/-update!)]
-      (unsafe/->UnsafeGroupBy key-fn rf' drain {}))))
+    (if (empty? xfs)
+      (unsafe/->UnsafeGroupBy key-fn drain {})
+      (let [rf ((apply comp xfs) p/-update!)]
+        (unsafe/->UnsafeGroupByAttachable rf key-fn drain {})))))
 
 (defn group-by [key-fn d]
   (letfn [(insert [this input]
