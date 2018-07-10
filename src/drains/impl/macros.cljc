@@ -3,7 +3,7 @@
             [drains.protocols :as p]
             [drains.impl.reduced :as reduced]))
 
-(defmacro def-attachable-drain [type-name fields methods]
+(defmacro def-attachable-drain [type-name fields methods & more]
   (let [rf (gensym 'rf)
         emit-methods (fn [methods]
                        (for [[mname method] methods
@@ -14,7 +14,8 @@
          p/IDrain
          ~(let [[args & body] (:-flush methods)]
             `(~'-flush ~args ~@body ~(first args)))
-         ~@(emit-methods (dissoc methods :-flush)))
+         ~@(emit-methods (dissoc methods :-flush))
+         ~@more)
        (deftype ~(symbol (str type-name 'Attachable)) ~(vec (cons rf fields))
          p/IDrain
          (~'-flush [this# input#]
@@ -25,7 +26,8 @@
          ~@(emit-methods (dissoc methods :-flush))
          p/Updater
          ~(let [[args & body] (:-flush methods)]
-            `(~'-update! ~args ~@body))))))
+            `(~'-update! ~args ~@body))
+         ~@more))))
 
 (defn collect-keys [ds]
   (reduce-kv (fn [ks k _] (conj ks k)) [] ds))
