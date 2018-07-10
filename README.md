@@ -197,6 +197,58 @@ The library also provides some more aggregation fns such as `d/reductions` and `
 ;=> 4999950000
 ```
 
+## Performance
+
+The Drains runs very efficiently in spite of its expressiveness and flexibility in design.
+
+Drains suppress memory allocation during the aggregation as much as possible and their implementations are well optimized for their typical use cases. So, they are usually almost equal to (or sometimes even better than) Clojure's counterparts in performance:
+
+```clj
+(require '[criterium.core :refer [quick-bench]])
+
+;; Drains
+
+(quick-bench (d/reduce (d/drains [(d/drain min ##Inf) (d/drain max ##-Inf)]) (range 1000000)))
+;; Evaluation count : 24 in 6 samples of 4 calls.
+;;              Execution time mean : 28.793182 ms
+;;     Execution time std-deviation : 950.228568 µs
+;;    Execution time lower quantile : 27.811876 ms ( 2.5%)
+;;    Execution time upper quantile : 29.787913 ms (97.5%)
+;;                    Overhead used : 8.015921 ns
+
+;; corresponding code in clojure.core
+
+(quick-bench (reduce (fn [[mi ma] x] [(min mi x) (max ma x)]) [##Inf ##-Inf] (range 1000000)))
+;; Evaluation count : 18 in 6 samples of 3 calls.
+;;              Execution time mean : 38.313381 ms
+;;     Execution time std-deviation : 1.375499 ms
+;;    Execution time lower quantile : 36.656866 ms ( 2.5%)
+;;    Execution time upper quantile : 40.239558 ms (97.5%)
+;;                    Overhead used : 8.015921 ns
+```
+
+```clj
+;; Drains
+
+(quick-bench (d/reduce (d/group-by #(rem % 10) (d/drain conj)) (range 1000000)))
+;; Evaluation count : 6 in 6 samples of 1 calls.
+;;              Execution time mean : 119.204513 ms
+;;     Execution time std-deviation : 24.679129 ms
+;;    Execution time lower quantile : 89.878243 ms ( 2.5%)
+;;    Execution time upper quantile : 149.656373 ms (97.5%)
+;;                    Overhead used : 8.015921 ns
+
+;; corresponding code in clojure.core
+
+(quick-bench (group-by #(rem % 10) (range 1000000)))
+;; Evaluation count : 6 in 6 samples of 1 calls.
+;;              Execution time mean : 222.926809 ms
+;;     Execution time std-deviation : 31.079101 ms
+;;    Execution time lower quantile : 187.375581 ms ( 2.5%)
+;;    Execution time upper quantile : 257.340992 ms (97.5%)
+;;                    Overhead used : 8.015921 ns
+```
+
 ## Related works
 
 - [xforms](https://github.com/cgrand/xforms)
