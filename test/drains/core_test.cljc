@@ -50,7 +50,20 @@
     (d/drains [(d/drain (take 5) min POS_INF)
                (d/drain (take 5) max NEG_INF)])
     (range)
-    [0 4]))
+    [0 4]
+
+    (d/drains [(d/drain +)
+               (d/drain +)
+               (d/drain +)])
+    (range 10)
+    [45 45 45]
+
+    (d/drains [(d/drain +)
+               (d/drain +)
+               (d/drain +)
+               (d/drain +)])
+    (range 10)
+    [45 45 45 45]))
 
 (deftest fmap-test
   (are [d input expected] (= expected
@@ -115,6 +128,21 @@
                        (d/drain max NEG_INF)]))
     [3 1 4 1 5 9 2 6 5]
     [2 6]
+
+    (d/with (take 10)
+            (d/drains [(d/drain +)
+                       (d/drain +)
+                       (d/drain +)]))
+    (range)
+    [45 45 45]
+
+    (d/with (take 10)
+            (d/drains [(d/drain +)
+                       (d/drain +)
+                       (d/drain +)
+                       (d/drain +)]))
+    (range)
+    [45 45 45 45]
 
     (d/with (map inc)
             (d/fmap (fn [strs] (str/join \| strs))
