@@ -53,6 +53,11 @@
   (update-reduced! [this]
     (set! reduced? true)))
 
+;; defines
+;;  - UnsafeDrains2
+;;  - UnsafeDrains2Attachable
+;;  - UnsafeDrains3
+;;  - UnsafeDrains3Attachable
 (def-unsafe-drains-n 2 3)
 
 (deftype UnsafeFmap [f

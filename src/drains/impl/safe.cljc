@@ -41,14 +41,20 @@
     #(assoc this :rf (xf rf) :xfs (cons xf xfs)))
   p/ToUnsafe
   (->unsafe [this]
-    (let [rf' ((apply comp xfs) p/-update!)
-          ds (utils/map-vals utils/->unsafe drains)
-          ds' (reduce-kv (fn [ds _ d] (conj ds d)) [] ds)]
-      (case (count ds)
-        2 (unsafe/->UnsafeDrains2 rf' (nth ds' 0) (nth ds' 1) false false ds)
-        3 (unsafe/->UnsafeDrains3 rf' (nth ds' 0) (nth ds' 1) (nth ds' 2)
-                                  false false false ds)
-        (unsafe/->UnsafeDrains rf' ds (transient active-keys) false)))))
+    (let [ds (utils/map-vals utils/->unsafe drains)
+          dimpls (reduce-kv (fn [ds _ d] (conj ds d)) [] ds)]
+      (if (empty? xfs)
+        (case (count ds)
+          2 (unsafe/->UnsafeDrains2 (nth dimpls 0) (nth dimpls 1) false false ds)
+          3 (unsafe/->UnsafeDrains3 (nth dimpls 0) (nth dimpls 1) (nth dimpls 2)
+                                    false false false ds)
+          (unsafe/->UnsafeDrains ds (transient active-keys) false))
+        (let [rf ((apply comp xfs) p/-update!)]
+          (case (count ds)
+            2 (unsafe/->UnsafeDrains2Attachable rf (nth dimpls 0) (nth dimpls 1) false false ds)
+            3 (unsafe/->UnsafeDrains3Attachable rf (nth dimpls 0) (nth dimpls 1) (nth dimpls 2)
+                                                false false false ds)
+            (unsafe/->UnsafeDrainsAttachable rf ds (transient active-keys) false)))))))
 
 (defn drains [ds]
   (let [ds (cond-> ds (seq? ds) vec)
