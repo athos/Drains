@@ -48,13 +48,13 @@
           2 (unsafe/->UnsafeDrains2 (nth dimpls 0) (nth dimpls 1) false false ds)
           3 (unsafe/->UnsafeDrains3 (nth dimpls 0) (nth dimpls 1) (nth dimpls 2)
                                     false false false ds)
-          (unsafe/->UnsafeDrains ds (transient active-keys) false))
+          (unsafe/->UnsafeDrains ds false active-keys))
         (let [rf ((apply comp xfs) p/-update!)]
           (case (count ds)
             2 (unsafe/->UnsafeDrains2Attachable rf (nth dimpls 0) (nth dimpls 1) false false ds)
             3 (unsafe/->UnsafeDrains3Attachable rf (nth dimpls 0) (nth dimpls 1) (nth dimpls 2)
                                                 false false false ds)
-            (unsafe/->UnsafeDrainsAttachable rf ds (transient active-keys) false)))))))
+            (unsafe/->UnsafeDrainsAttachable rf ds false active-keys)))))))
 
 (defn drains [ds]
   (let [ds (cond-> ds (seq? ds) vec)

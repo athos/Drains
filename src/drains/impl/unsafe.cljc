@@ -20,8 +20,11 @@
 ;; FIXME: we can't change mutable fields from within fn exprs, so have to bypass
 ;; that restriction by using dedicated protocol methods
 
-(defprotocol DrainsUpdater
-  (update-drains! [this drains']))
+(defprotocol DrainUpdater
+  (update-drain! [this k drain]))
+
+(defprotocol ActiveKeyUpdater
+  (disj-active-key! [this k]))
 
 (defprotocol ReducedUpdater
   (update-reduced! [this]))
@@ -30,8 +33,8 @@
 ;;  - UnsafeDrains
 ;;  - UnsafeDrainsAttachable
 (def-attachable-drain UnsafeDrains [^:unsynchronized-mutable ds
-                                    active-keys
-                                    ^:unsynchronized-mutable reduced?]
+                                    ^:unsynchronized-mutable reduced?
+                                    ^:unsynchronized-mutable active-keys]
   {:-reduced? ([this] reduced?)
    :-residual ([this]
                (reduce-kv (fn [ds k drain] (assoc ds k (p/-residual drain))) ds ds))
@@ -39,16 +42,19 @@
             (reduce-kv (fn [_ k drain]
                          (let [drain' (p/-flush drain input)]
                            (when-not (identical? drain drain')
-                             (update-drains! this (assoc ds k drain'))
+                             (update-drain! this k drain')
                              (when (p/-reduced? drain')
-                               (disj! active-keys k)
-                               (when (zero? (count active-keys))
+                               (disj-active-key! this k)
+                               (when-not (seq (.-active-keys this))
                                  (update-reduced! this))))))
                        nil
                        ds))}
-  DrainsUpdater
-  (update-drains! [this drains']
-    (set! ds drains'))
+  DrainUpdater
+  (update-drain! [this k drain]
+    (set! ds (assoc ds k drain)))
+  ActiveKeyUpdater
+  (disj-active-key! [this k]
+    (set! active-keys (disj active-keys k)))
   ReducedUpdater
   (update-reduced! [this]
     (set! reduced? true)))
