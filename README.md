@@ -128,20 +128,6 @@ The combination of `d/drains` and `d/fmap` is useful and relatively common, so D
           (range 10))
 ```
 
-### `d/with`
-
-You can also attach a transducer to existing drains using `d/with`:
-
-```clj
-(d/reduce (d/with (take 5)
-                  (d/drains {:min (d/drain min ##Inf)
-                             :max (d/drain max ##-Inf)}))
-          [3 1 4 1 5 9 2])
-;=> {:min 1, :max 5}
-```
-
-In particular, `(d/with xf (d/drain op val))` is equivalent to `(d/drain xf op val)`.
-
 ### `d/group-by`
 
 Another convenient facility is `d/group-by`. `d/group-by` creates a fresh copy of the given drain every time it encounters a new key value (calculated with the specified key-fn), and manages each of the copies respectively through the aggregation:
@@ -160,7 +146,40 @@ Another convenient facility is `d/group-by`. `d/group-by` creates a fresh copy o
 ;    2 {:items [2 5 8], :sum 15}}
 ```
 
-Note that attaching a transducer to a drain constructed with `d/group-by` may cause a different result from the one obtained by attaching the transducer to the underlying drain. For example:
+### `d/with`
+
+You can also attach a transducer to existing drains using `d/with`:
+
+```clj
+(d/reduce (d/with (map :x)
+                  (d/drains [(d/drain (filter even?) conj [])
+                             (d/drain (filter odd?) conj [])]))
+          [{:x 1} {:x 2} {:x 3} {:x 4} {:x 5}])
+;=> [[2 4] [1 3 5]]
+
+(d/reduce (d/with (take 5)
+                  (d/drains {:min (d/drain min ##Inf)
+                             :max (d/drain max ##-Inf)}))
+          [3 1 4 1 5 9 2])
+;=> {:min 1, :max 5}
+```
+
+In particular, `(d/with xf (d/drain op val))` is equivalent to `(d/drain xf op val)`.
+
+Note that which drain you attach a transducer to may cause a different result in some cases. For example:
+
+```clj
+(d/reduce (d/with (take 5)
+                  (d/drains {:evens (d/drain (filter even?) conj [])
+                             :odds (d/drain (filter odd?) conj [])}))
+          (range 20))
+;=> {:evens [0 2 4], :odds [1 3]}
+
+(d/reduce (d/drains {:evens (d/drain (comp (filter even?) (take 5)) conj [])
+                     :odds (d/drain (comp (filter odd?) (take 5)) conj [])})
+          (range 20))
+;=> {:evens [0 2 4 6 8], :odds [1 3 5 7 9]}
+```
 
 ```clj
 (d/reduce (d/with (take 5)
