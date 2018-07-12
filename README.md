@@ -270,12 +270,15 @@ Drains suppress memory allocation during the aggregation as much as possible and
 
 ## Related works
 
+- [babbage](https://github.com/ReadyForZero/babbage)
+    - Very much resembles Drains except for its computation graph facilities
+    - Provides a little bit complicated API due to lack of transducers integration (since it was released long before Clojure introduced transducers in 1.7!)
 - [xforms](https://github.com/cgrand/xforms)
     - Provides various utility transducers and reducing fns
-    - Those utilities can be effectively used from the Drains through drain abstraction
+    - Those utilities can be effectively used from Drains through drain abstraction
 - [parallel](https://github.com/reborg/parallel)
     - Defines a version of aggregation fns enabled to perform parallel execution a la `clojure.core.reducers/fold`
-    - Although the Drains also provides the `fold` fn for that purpose, `parallel` functions often show better performance for parallel execution in paticular.
+    - Although Drains also provides the `fold` fn for that purpose, `parallel` functions often show better performance for parallel execution in paticular.
 
 ## License
 
