@@ -5,7 +5,7 @@
 
 Drains: A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)
 
-A drain is a stateful object that consists of a reducing fn and an accumulated value. Drains can be used as composable and reusable building blocks for construction of sequence aggregation.
+A drain is a stateful object that consists of a reducing fn and an accumulated value. Drains can be used as composable and reusable building blocks for constructing sequence aggregation.
 This library provides several easy ways to combining multiple drains and to produce a new drain from another one, and also provides a couple of custom aggregation functions such as `reduce`, `reductions` and `fold`.
 
 ## Table of contents
@@ -40,7 +40,7 @@ If you would rather use an unstable version of the library via [Clojure CLI tool
 
 ## Usage
 
-To use this library, first require the `drains.core` ns as follows:
+To use this library, first require the `drains.core` ns:
 
 ```clj
 (require '[drains.core :as d])
@@ -117,7 +117,7 @@ An interesting nature of drains is that they can be composed surprisingly easily
 
 ### `d/fmap`, `d/combine-with`
 
-`d/fmap` is another way to create a drain from another drain. It enables to transform the resulting aggregation value:
+`d/fmap` is another way to create a drain from another drain. It can transform the form of the aggregation result:
 
 ```clj
 (d/reduce (d/fmap (fn [sum] {:sum sum})
@@ -132,7 +132,7 @@ An interesting nature of drains is that they can be composed surprisingly easily
 ;=> {:average 4.5}
 ```
 
-The combination of `d/drains` and `d/fmap` is useful and relatively common, so Drains provides the alias for that: `d/combine-with`. With `d/combine-with`, you can rewrite the example code above like the following:
+The combination of `d/drains` and `d/fmap` is useful and relatively common, so Drains provides the alias for that: `d/combine-with`. With `d/combine-with`, you can rewrite the above example like the following:
 
 ```clj
 (d/reduce (d/combine-with (fn [sum count] {:average (/ sum (double count))})
