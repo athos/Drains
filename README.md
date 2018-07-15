@@ -179,6 +179,35 @@ You can also attach a transducer to existing drains using `d/with`:
 
 In particular, `(d/with xf (d/drain op val))` is equivalent to `(d/drain xf op val)`.
 
+`d/with` is so powerful to make existing drains reusable in various ways:
+
+```clj
+(def countries
+  [{:name "Canada" :area 9984 :population 36 :continent "North America"}
+   {:name "China" :area 9634 :population 1390 :continent "Asia"}
+   {:name "Germany" :area 357 :population 82 :continent "Europe"}
+   {:name "Japan" :area 377 :population 126 :continent "Asia"}
+   {:name "UK" :area 244 :population 63 :continent "Europe"}
+   {:name "USA" :area 9628 :population 327 :continent "North America"}}])
+
+(def sum (d/drain +))
+
+;; total population
+(d/reduce (d/with (map :population) sum) countries)
+;=> 2024
+
+;; total area
+(d/reduce (d/with (map :area) sum) countries)
+;=> 30224
+
+;; total are in Europe
+(d/reduce (d/with (comp (filter #(= (:continent %) "Europe"))
+                        (map :area))
+                  sum)
+          countries)
+;=> 601
+```
+
 Note that which drain you attach a transducer to may cause a different result in some cases. For example:
 
 ```clj
