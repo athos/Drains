@@ -8,6 +8,37 @@ Drains: A new abstraction for flexible and efficient sequence aggregation in Clo
 A drain is a stateful object that consists of a reducing fn and an accumulated value. Drains can be used as composable and reusable building blocks for constructing sequence aggregation.
 This library provides several easy ways to combining multiple drains and to produce a new drain from another one, and also provides a couple of custom aggregation functions such as `reduce`, `reductions` and `fold`.
 
+## SYNOPSIS
+
+```clj
+(require '[drains.core :as d])
+
+(def countries
+  [{:name "Canada" :area 9984 :population 36 :continent "North America"}
+   {:name "China" :area 9634 :population 1390 :continent "Asia"}
+   {:name "Germany" :area 357 :population 82 :continent "Europe"}
+   {:name "Japan" :area 377 :population 126 :continent "Asia"}
+   {:name "UK" :area 244 :population 63 :continent "Europe"}
+   {:name "USA" :area 9628 :population 327 :continent "North America"}])
+
+(def sum (d/drain +))
+(def total-population (d/with (map :population) sum))
+(def total-area (d/with (map :area) sum))
+
+(d/reduce (d/drains {:total-population total-population
+                     :total-area total-area
+                     :continents (d/group-by :continent
+                                             (d/drains {:countries (d/drain (map :name) conj [])
+                                                        :population total-population
+                                                        :area total-area}))})
+          countries)
+;=> {:total-population 2024,
+;    :total-area 30224,
+;    :continents {"North America" {:countries ["Canada" "USA"], :population 363, :area 19612},
+;                 "Asia" {:countries ["China" "Japan"], :population 1516, :area 10011},
+;                 "Europe" {:countries ["Germany" "UK"], :population 145, :area 601}}}
+```
+
 ## Table of contents
 
 - [Installation](#installation)
@@ -188,7 +219,7 @@ In particular, `(d/with xf (d/drain op val))` is equivalent to `(d/drain xf op v
    {:name "Germany" :area 357 :population 82 :continent "Europe"}
    {:name "Japan" :area 377 :population 126 :continent "Asia"}
    {:name "UK" :area 244 :population 63 :continent "Europe"}
-   {:name "USA" :area 9628 :population 327 :continent "North America"}}])
+   {:name "USA" :area 9628 :population 327 :continent "North America"}])
 
 (def sum (d/drain +))
 
