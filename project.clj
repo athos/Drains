@@ -1,4 +1,4 @@
-(defproject drains "0.1.0"
+(defproject drains "0.1.1-SNAPSHOT"
   :description "A new abstraction for flexible and efficient sequence aggregation in Clojure(Script)"
   :url "https://github.com/athos/Drains"
   :license {:name "Eclipse Public License"
