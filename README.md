@@ -111,6 +111,20 @@ Using the `d/reduce`, you can aggregate a sequence like `clojure.core/reduce`:
 
 In general, `(d/reduce (d/drain xf op val) xs)` is semantically equal to `(transduce xf op val xs)`.
 
+Note that the reducing fn passed to a drain must have an arity-1 signature for cooperating with transducers. If your reducing fn can't be called with one argument, use `clojure.core/completing` to adding an arity-1 signature to it:
+
+```clj
+;; You don't have to wrap + with clojure.core/completing since + has an arity-1 signature
+(d/reduce (d/drain + 0) [3 1 4 1 5])
+;=> 14
+
+;; But the reducing fn below doesn't, so it's necessary to be wrapped with clojure.core/completing
+(d/reduce (d/drain (fn [n d] (+ (* 10 n) d)) 0) [3 1 4 1 5])
+;; ArityException Wrong number of args (1) passed to: user/eval1108/fn--1109
+(d/reduce (d/drain (completing (fn [n d] (+ (* 10 n) d))) 0) [3 1 4 1 5])
+;=> 31415
+```
+
 ### `d/drains`
 
 An interesting nature of drains is that they can be composed surprisingly easily. `d/drains` is the simplest way to compose existing drains:
