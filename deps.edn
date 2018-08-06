@@ -3,6 +3,9 @@
         org.clojure/clojurescript {:mvn/version "1.10.238"}}
  :aliases
  {:1.8 {:override-deps {org.clojure/clojure {:mvn/version "1.8.0"}}}
+  :check {:extra-deps {athos/clj-check {:git/url "https://github.com/athos/clj-check.git"
+                                        :sha "dde919d1b10af4ee18944a212d914654302c5838"}}
+          :main-opts ["-m" "clj-check.check"]}
   :test {:extra-paths ["test"]
          :main-opts ["-m" "drains.test-runner"]}
   :test-cljs {:main-opts ["-m" "cljs.main" "-re" "nashorn" "-m" "drains.test-runner"]}

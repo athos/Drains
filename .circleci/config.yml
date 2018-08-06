@@ -17,13 +17,17 @@ jobs:
       - restore_cache:
           key: v1-dependencies-{{ checksum "deps.edn" }}
 
-      - run: clojure -A:test:coverage -Stree
+      - run: clojure -A:check:test:coverage -Stree
 
       - save_cache:
           paths:
             - ~/.m2
             - ~/.gitlibs
           key: v1-dependencies-{{ checksum "deps.edn" }}
+
+      - run:
+          name: check
+          command: clojure -A:check
 
       - run:
           name: test CLJ
