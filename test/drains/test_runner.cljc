@@ -4,5 +4,6 @@
              drains.utils-test))
 
 (defn -main []
-  (t/run-tests 'drains.core-test
-               'drains.utils-test))
+  (let [{:keys [fail error]} (t/run-tests 'drains.core-test
+                                          'drains.utils-test)]
+    (System/exit (if (zero? (+ fail error)) 0 1))))
