@@ -1,7 +1,10 @@
 (ns drains.utils
   (:refer-clojure :exclude [count frequencies max max-key min min-key sort sort-by])
   (:require [clojure.core :as cc]
-            [drains.core :as d]))
+            [drains.core :as d]
+            [drains.protocols :as p]))
+
+#?(:clj (set! *unchecked-math* true))
 
 (defn sum
   ([] (sum 0))
@@ -16,7 +19,15 @@
 (defn count
   ([] (count 0))
   ([init]
-   (d/drain (completing (fn [n _] (inc n))) init)))
+   (d/with-unsafe (d/drain (completing (fn [n _] (inc n))) init)
+     (fn []
+       (let [arr (long-array [init])]
+         (reify p/IDrain
+           (-reduced? [this] false)
+           (-flush [this input]
+             (aset arr 0 (inc (aget arr 0)))
+             this)
+           (-residual [this] (aget arr 0))))))))
 
 (defn frequencies []
   (d/group-by identity (count)))
