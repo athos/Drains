@@ -150,3 +150,6 @@
        (if (drain? ret)
          (p/-residual ret)
          ret)))))
+
+(defn with-unsafe [drain unsafe-fn]
+  (p/-with-unsafe (utils/unwrap drain) unsafe-fn))

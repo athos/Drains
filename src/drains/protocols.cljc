@@ -12,6 +12,9 @@
 (defprotocol ToUnsafe
   (->unsafe [this]))
 
+(defprotocol WithUnsafe
+  (-with-unsafe [this unsafe-fn]))
+
 ;; intended for internal use
 (defprotocol Updater
   (-update! [this input]))

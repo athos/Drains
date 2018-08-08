@@ -6,7 +6,7 @@
             [drains.impl.unsafe :as unsafe]
             [drains.impl.utils :as utils]))
 
-(defrecord Drain [rf val]
+(defrecord Drain [rf val unsafe-fn]
   p/IDrain
   (-reduced? [this] false)
   (-flush [this input]
@@ -17,14 +17,19 @@
   (-residual [this] (rf val))
   p/Attachable
   (-attach [this xf]
-    #(update this :rf xf))
+    #(assoc this :rf (xf rf) :unsafe-fn nil))
+  p/WithUnsafe
+  (-with-unsafe [this unsafe-fn]
+    #(assoc this :unsafe-fn unsafe-fn))
   p/ToUnsafe
   (->unsafe [this]
-    (unsafe/->UnsafeDrain rf val)))
+    (if unsafe-fn
+      (unsafe-fn)
+      (unsafe/->UnsafeDrain rf val))))
 
 (defn drain [xform rf init]
   (fn []
-    (->Drain (cond-> rf xform xform) init)))
+    (->Drain (cond-> rf xform xform) init nil)))
 
 (defrecord Drains [drains rf xfs active-keys]
   p/IDrain
